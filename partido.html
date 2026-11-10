@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Partido — NBA LAB</title>
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=20261110c" />
+</head>
+<body data-page="match">
+  <header class="nav" data-nav>
+    <a class="brand" href="index.html"><span class="brand-dot"></span>NBA <b>LAB</b></a>
+    <nav class="nav-links">
+      <a href="index.html#calendario">Calendario</a>
+      <a href="index.html#jugadores">Jugadores</a>
+      <a href="index.html#escaner">Escáner</a>
+    </nav>
+    <a class="nav-tg" href="https://t.me/+vensGz7cBlY3MzQ8" target="_blank" rel="noopener" data-tg><svg class="tg-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 3.5 2.8 10.7c-.9.4-.9 1.6.1 1.9l4.6 1.5 1.8 5.6c.3.8 1.3 1 1.9.4l2.6-2.5 4.9 3.6c.7.5 1.7.1 1.9-.7L23 4.9c.2-1-.7-1.8-1.5-1.4Zm-3.6 4.2-8.4 7.5-.3 3.2-1.3-4.3 10-6.4Z" fill="currentColor"/></svg><span>Telegram</span></a>
+    <div class="nav-status mono" data-status>Cargando…</div>
+  </header>
+
+  <main>
+    <section class="m-head">
+      <div class="hero-gradient soft" aria-hidden="true"></div>
+      <a class="back mono" href="index.html#calendario">← Calendario</a>
+      <div class="m-title" data-m-title><h1>Cargando partido…</h1></div>
+      <p class="m-sub mono" data-m-sub></p>
+    </section>
+
+    <section class="m-layout">
+      <aside class="m-side">
+        <div class="m-teams" data-m-teams></div>
+        <div class="seg m-pos" data-m-pos>
+          <button data-v="all" class="on">Todos</button><button data-v="G">Base/Esc.</button><button data-v="F">Alero</button><button data-v="C">Pívot</button>
+        </div>
+        <input type="search" class="input m-search" data-m-search placeholder="Buscar jugador en los dos equipos…" aria-label="Buscar jugador" autocomplete="off" />
+        <p class="m-list-note mono" data-m-note></p>
+        <div class="m-list" data-m-list></div>
+      </aside>
+
+      <div class="m-main">
+        <div class="m-player" data-m-player></div>
+        <div class="m-stats" data-m-stats></div>
+        <div class="toolbar m-tools">
+          <div class="seg" data-m-range><button data-v="5">L5</button><button data-v="10">L10</button><button data-v="15">L15</button><button data-v="20" class="on">L20</button><button data-v="50">L50</button><button data-v="100">L100</button></div>
+          <div class="seg" data-m-loc><button data-v="all" class="on">Local + Visit.</button><button data-v="1">Local</button><button data-v="0">Visitante</button></div>
+          <div class="role-box" data-m-role>
+            <label class="check"><input type="checkbox" data-role="tit" checked /> Titular</label>
+            <label class="check"><input type="checkbox" data-role="sup" checked /> Suplente</label>
+          </div>
+          <label class="check"><input type="checkbox" data-m-showmin checked /> Minutos</label>
+        </div>
+        <article class="card chart-card" data-m-card>
+          <div class="chart-head">
+            <h3 data-m-chart-title>—</h3>
+            <div class="line-input"><button type="button" data-d="-1" aria-label="Bajar">−</button><input type="number" step="0.5" data-m-line aria-label="Línea de apuesta" /><button type="button" data-d="1" aria-label="Subir">+</button></div>
+          </div>
+          <div class="odds-row"><span class="mono tb-lbl">Cuotas de tu casa</span>
+            <label class="odd"><span>Over</span><input type="text" inputmode="decimal" placeholder="1,85" data-odd="o" /></label>
+            <label class="odd"><span>Under</span><input type="text" inputmode="decimal" placeholder="1,95" data-odd="u" /></label>
+            <div class="value-out" data-m-value></div>
+          </div>
+          <div class="hit-strip" data-m-hits></div>
+          <div class="plot" data-m-plot></div>
+          <div class="legend"><span><i class="sq" style="background:var(--over)"></i>Over</span><span><i class="sq" style="background:var(--under)"></i>Under</span><span><i style="border-color:var(--bet)"></i>Línea</span><span><i style="border-color:#fff;border-top-style:dashed"></i>Media</span><span><i style="border-color:#4cc9ff"></i>Minutos (eje derecho)</span><span>T = titular · S = suplente</span></div>
+        </article>
+        <a class="btn btn-ghost m-full" data-m-full href="#">Ver ficha completa del jugador →</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div><b>NBA LAB</b> · <span data-source>—</span> · <a href="https://t.me/+vensGz7cBlY3MzQ8" target="_blank" rel="noopener" data-tg data-tg-handle>Canal de Telegram</a></div>
+    <div class="mono small">Herramienta de análisis estadístico, sin afiliación con la NBA. No garantiza resultados. <a href="https://www.jugarbien.es" target="_blank" rel="noopener">Juega con responsabilidad · +18</a></div>
+  </footer>
+
+  <a class="tg-float" href="https://t.me/+vensGz7cBlY3MzQ8" target="_blank" rel="noopener" data-tg aria-label="Únete al canal de Telegram"><svg class="tg-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 3.5 2.8 10.7c-.9.4-.9 1.6.1 1.9l4.6 1.5 1.8 5.6c.3.8 1.3 1 1.9.4l2.6-2.5 4.9 3.6c.7.5 1.7.1 1.9-.7L23 4.9c.2-1-.7-1.8-1.5-1.4Zm-3.6 4.2-8.4 7.5-.3 3.2-1.3-4.3 10-6.4Z" fill="currentColor"/></svg><span>Únete al canal</span></a>
+  <div class="tooltip" data-tip hidden></div>
+
+  <script defer src="lib/manifest.js?v=20261109d"></script>
+  <script defer src="data/schedule.js?v=20261109"></script>
+  <script defer src="data/index.js?v=20261109"></script>
+  <script defer src="main.js?v=20261110c"></script>
+</body>
+</html>

@@ -380,6 +380,133 @@
   }
 
 
+  /* --- gráfico de barras --- */
+  function drawBars(host, s, shown, line, pool, showMin) {
+    var W = Math.max(320, Math.round(host.clientWidth || 960)), pl = 34, pr = showMin ? 128 : 92, pt = 14;
+    var n = shown.length, iw = W - pl - pr, bw = iw / Math.max(n, 1);
+    var showLogos = bw >= 14, logoS = Math.min(24, Math.floor(bw * 0.78));
+    var showRole = bw >= 14 && shown.some(function (g) { return g.st === 0 || g.st === 1; });
+    var showVals = bw >= 20;
+    var pb = 24 + (showLogos ? logoS + 8 : 0) + (showRole ? 13 : 0);
+    var H = (W < 640 ? 250 : 300) + (pb - 26), ih = H - pt - pb;
+    var labX = W - pr + (showMin ? 36 : 6), labW = pr - (showMin ? 38 : 8);
+    var xs = shown.map(function (g) { return val(s, g); });
+    var real = xs.filter(function (x) { return x != null; });
+    var mx = Math.max.apply(null, real.concat([line, 1])) * 1.08;
+    var tick = niceStep(mx / 4), nice = tick * Math.ceil(mx / tick);
+    if (s.pct && nice > 100) { nice = 100; tick = 25; }
+    var Y = function (v) { return pt + ih - v / nice * ih; };
+    var out = ['<svg class="chart-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(s.l) + '">'];
+    out.push('<g class="grid">');
+    for (var v = 0; v <= nice + 1e-9; v += tick) {
+      var yy = Y(v);
+      out.push('<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + yy + '" y2="' + yy + '"/><text x="' + (pl - 6) + '" y="' + (yy + 4) + '" text-anchor="end">' + fmt(v, v % 1 ? 1 : 0) + "</text>");
+    }
+    out.push("</g>");
+    out.push('<text class="wm" x="' + (pl + iw / 2).toFixed(0) + '" y="' + (pt + Math.min(ih * 0.2, 60) + 20).toFixed(0) + '" text-anchor="middle" font-size="' + Math.max(26, Math.min(64, iw / 9)).toFixed(0) + '">NBA-LAB</text>');
+    // separadores de temporada
+    for (var i = 1; i < n; i++) {
+      if (shown[i].s !== shown[i - 1].s) {
+        var sx = pl + i * bw;
+        out.push('<line class="sep" x1="' + sx + '" x2="' + sx + '" y1="' + pt + '" y2="' + (pt + ih) + '"/><text class="sep-t" x="' + (sx + 4) + '" y="' + (pt + 10) + '">' + esc(shown[i].s) + "</text>");
+      }
+    }
+    // barras
+    var gap = n > 60 ? 0.18 : 0.26;
+    xs.forEach(function (x, i2) {
+      var bx = pl + i2 * bw + bw * gap / 2, w2 = Math.max(1, bw * (1 - gap));
+      if (x == null) { out.push('<rect class="bar p" data-i="' + i2 + '" x="' + bx.toFixed(1) + '" y="' + (pt + ih - 2) + '" width="' + w2.toFixed(1) + '" height="2"/>'); return; }
+      var y0 = Y(Math.max(0, x)), hh = Math.max(2, pt + ih - y0);
+      var c = x > line ? "o" : x < line ? "u" : "p";
+      out.push('<rect class="bar ' + c + '" data-i="' + i2 + '" x="' + bx.toFixed(1) + '" y="' + (pt + ih - hh).toFixed(1) + '" width="' + w2.toFixed(1) + '" height="' + hh.toFixed(1) + '" rx="' + Math.min(6, w2 / 4).toFixed(1) + '"/>');
+      if (showVals && hh >= 16) out.push('<text class="bar-v" x="' + (bx + w2 / 2).toFixed(1) + '" y="' + (pt + ih - 5).toFixed(1) + '" text-anchor="middle" font-size="' + Math.min(13, w2 * 0.45).toFixed(0) + '">' + fmt(x, s.pct || x % 1 ? 1 : 0) + "</text>");
+    });
+    // fila inferior: rol (T/S) y escudo del rival
+    shown.forEach(function (g, i3) {
+      var cx = pl + (i3 + 0.5) * bw, yb = pt + ih + 4;
+      if (showRole) { out.push('<text class="role-l" x="' + cx.toFixed(1) + '" y="' + (yb + 9) + '" text-anchor="middle">' + (g.st === 1 ? "T" : g.st === 0 ? "S" : "") + "</text>"); yb += 13; }
+      if (showLogos) {
+        var u = logoUrl(g.o);
+        out.push('<text class="logo-t" x="' + cx.toFixed(1) + '" y="' + (yb + logoS / 2 + 3).toFixed(1) + '" text-anchor="middle" font-size="' + Math.max(7, Math.min(10, logoS * 0.4)).toFixed(0) + '">' + esc(g.o) + "</text>");
+        if (u) out.push('<image href="' + u + '" x="' + (cx - logoS / 2).toFixed(1) + '" y="' + yb.toFixed(1) + '" width="' + logoS + '" height="' + logoS + '" preserveAspectRatio="xMidYMid meet" onload="if(this.previousSibling)this.previousSibling.remove()" onerror="this.remove()"/>');
+      }
+    });
+    // línea de minutos (eje derecho)
+    if (showMin) {
+      var mMax = Math.max(48, Math.max.apply(null, shown.map(function (g) { return g.min || 0; })) + 2);
+      var YM = function (m) { return pt + ih - m / mMax * ih; };
+      out.push('<g class="min-axis">');
+      [0, 12, 24, 36, 48].forEach(function (m) { out.push('<text x="' + (W - pr + 6) + '" y="' + (YM(m) + 4).toFixed(1) + '">' + m + "'</text>"); });
+      out.push("</g>");
+      var dp = shown.map(function (g, i4) { return (i4 ? "L" : "M") + (pl + (i4 + 0.5) * bw).toFixed(1) + " " + YM(g.min || 0).toFixed(1); }).join("");
+      out.push('<path class="min-line" d="' + dp + '"/>');
+      if (bw >= 10) shown.forEach(function (g, i5) { out.push('<circle class="min-dot" cx="' + (pl + (i5 + 0.5) * bw).toFixed(1) + '" cy="' + YM(g.min || 0).toFixed(1) + '" r="' + (bw >= 24 ? 3 : 2) + '"/>'); });
+    }
+    // eje x: fechas
+    out.push('<g class="xl">');
+    var stepX = Math.max(1, Math.ceil(n / Math.max(1, Math.floor(iw / 52))));
+    for (var j = 0; j < n; j += stepX) out.push('<text x="' + (pl + (j + 0.5) * bw).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">' + fdate(shown[j].d) + "</text>");
+    out.push("</g>");
+    // líneas de media
+    var a100 = avgOf(s, shown), a20 = avgOf(s, shown.slice(-20)), a10 = avgOf(s, shown.slice(-10));
+    var labs = [];
+    function hline(v, cls, txt, color, fg) {
+      if (v == null) return;
+      var yy2 = Y(Math.min(v, nice));
+      out.push('<line class="' + cls + '" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + yy2.toFixed(1) + '" y2="' + yy2.toFixed(1) + '"/>');
+      labs.push({ y: yy2, t: txt + " " + fmt(v), c: color, f: fg });
+    }
+    hline(a100, "avg a100", "M" + n, "#ffffff", "#0a0b0d");
+    hline(a20, "avg a20", "M20", "#6aa3ff", "#04122e");
+    hline(a10, "avg a10", "M10", "#c08bff", "#1c0738");
+    hline(line, "bet", "LÍN", "#ffd23f", "#2a2000");
+    labs.sort(function (a, b) { return a.y - b.y; });
+    for (var q = 1; q < labs.length; q++) if (labs[q].y - labs[q - 1].y < 17) labs[q].y = labs[q - 1].y + 17;
+    var over = labs.length ? labs[labs.length - 1].y - (pt + ih) : 0;
+    if (over > 0) labs.forEach(function (l) { l.y -= over; });
+    labs.forEach(function (l) {
+      out.push('<g class="lab"><rect x="' + labX + '" y="' + (l.y - 9).toFixed(1) + '" width="' + labW + '" height="18" fill="' + l.c + '"/><text x="' + (labX + 6) + '" y="' + (l.y + 4).toFixed(1) + '" fill="' + l.f + '">' + esc(l.t) + "</text></g>");
+    });
+    out.push('<line class="cursor" x1="0" x2="0" y1="' + pt + '" y2="' + (pt + ih) + '" visibility="hidden"/>');
+    out.push("</svg>");
+    host.innerHTML = out.join("");
+
+    var svg = $("svg", host), cur = $(".cursor", svg), rects = $$(".bar", svg), lastI = -1;
+    function at(e) {
+      var r = svg.getBoundingClientRect();
+      var xv = (e.clientX - r.left) / r.width * W;
+      var i3 = Math.floor((xv - pl) / bw);
+      if (i3 < 0 || i3 >= n) { leave(); return; }
+      if (i3 !== lastI) {
+        if (lastI > -1 && rects[lastI]) rects[lastI].classList.remove("hl");
+        rects[i3].classList.add("hl"); lastI = i3;
+        svg.classList.add("hovering");
+        var cx = pl + (i3 + 0.5) * bw;
+        cur.setAttribute("x1", cx); cur.setAttribute("x2", cx); cur.setAttribute("visibility", "visible");
+      }
+      var g = shown[i3], x = xs[i3];
+      var res = x == null ? "p" : x > line ? "o" : x < line ? "u" : "p";
+      var resT = x == null ? "Sin intentos" : res === "o" ? "OVER" : res === "u" ? "UNDER" : "PUSH";
+      var shot = function (m, a) { return g[m] + "/" + g[a]; };
+      var html = '<div class="tt-top">' + esc(fdate(g.d, true)) + " · " + (g.h ? "vs " : "@ ") + esc(g.o) + " · " + (g.h ? "Local" : "Visitante") + (g.r ? " · " + (g.r === "W" ? "Victoria" : "Derrota") : "") + (g.po ? " · Playoffs" : "") + "</div>" +
+        '<div class="tt-val">' + (x == null ? "—" : fmt(x, s.pct || x % 1 ? 1 : 0)) + ' <small class="' + res + '">' + resT + "</small></div>" +
+        '<div class="tt-line">' + esc(s.s) + " · línea " + fmt(line) + " · " + fmt(g.min, 0) + " min</div>" +
+        '<div class="tt-line">' + g.pts + " PTS · " + g.reb + " REB · " + g.ast + " AST · 3P " + shot("fg3m", "fg3a") + " · TC " + shot("fgm", "fga") + "</div>";
+      var r2 = svg.getBoundingClientRect();
+      var yTop = x == null ? pt + ih : Y(Math.min(Math.max(x, 0), nice));
+      tipShow(html, r2.left + cx2(i3) / W * r2.width, r2.top + yTop / H * r2.height);
+    }
+    function cx2(i4) { return pl + (i4 + 0.5) * bw; }
+    function leave() {
+      if (lastI > -1 && rects[lastI]) rects[lastI].classList.remove("hl");
+      lastI = -1; svg.classList.remove("hovering"); cur.setAttribute("visibility", "hidden"); tipHide();
+    }
+    svg.addEventListener("pointermove", at);
+    svg.addEventListener("pointerdown", at);
+    svg.addEventListener("pointerleave", leave);
+  }
+
+
   /* =========================================================================
      CALENDARIO
      ========================================================================= */
@@ -486,7 +613,7 @@
           '<span class="g-time">' + esc(t.h) + '</span><span class="g-date mono">' + esc(t.d) + "</span>";
         return '<button type="button" class="game" data-gid="' + esc(g.id) + '">' + side(g.a, aw, false) +
           '<div class="g-mid">' + mid + '<span class="g-at mono">@</span>' + (g.lab ? '<span class="g-lab mono">' + esc(g.lab) + "</span>" : "") + "</div>" +
-          side(g.h, hw, true) + '<span class="g-cta mono">Ver jugadores ↓</span></button>';
+          side(g.h, hw, true) + '<span class="g-cta mono">Abrir partido →</span></button>';
       }).join("");
     }
     function openGame(btn) {
@@ -524,9 +651,8 @@
       sel = b.dataset.d; renderDays(); renderGames();
     });
     gamesEl.addEventListener("click", function (e) {
-      if (e.target.closest(".game-panel")) return;
       var b = e.target.closest(".game");
-      if (b) openGame(b);
+      if (b) location.href = "partido.html?g=" + encodeURIComponent(b.dataset.gid);
     });
     $("[data-cal-prev]").addEventListener("click", function () { start = addDays(start, -7); sel = addDays(sel, -7); renderDays(); renderGames(); });
     $("[data-cal-next]").addEventListener("click", function () { start = addDays(start, 7); sel = addDays(sel, 7); renderDays(); renderGames(); });
@@ -753,133 +879,6 @@
       return lineDefault(avgOf(STAT[kk], pool.slice(-20)));
     }
 
-    /* --- gráfico de barras --- */
-    function drawBars(host, s, shown, line, pool) {
-      var showMin = st.showMin;
-      var W = Math.max(320, Math.round(host.clientWidth || 960)), pl = 34, pr = showMin ? 128 : 92, pt = 14;
-      var n = shown.length, iw = W - pl - pr, bw = iw / Math.max(n, 1);
-      var showLogos = bw >= 14, logoS = Math.min(24, Math.floor(bw * 0.78));
-      var showRole = bw >= 14 && shown.some(function (g) { return g.st === 0 || g.st === 1; });
-      var showVals = bw >= 20;
-      var pb = 24 + (showLogos ? logoS + 8 : 0) + (showRole ? 13 : 0);
-      var H = (W < 640 ? 250 : 300) + (pb - 26), ih = H - pt - pb;
-      var labX = W - pr + (showMin ? 36 : 6), labW = pr - (showMin ? 38 : 8);
-      var xs = shown.map(function (g) { return val(s, g); });
-      var real = xs.filter(function (x) { return x != null; });
-      var mx = Math.max.apply(null, real.concat([line, 1])) * 1.08;
-      var tick = niceStep(mx / 4), nice = tick * Math.ceil(mx / tick);
-      if (s.pct && nice > 100) { nice = 100; tick = 25; }
-      var Y = function (v) { return pt + ih - v / nice * ih; };
-      var out = ['<svg class="chart-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(s.l) + '">'];
-      out.push('<g class="grid">');
-      for (var v = 0; v <= nice + 1e-9; v += tick) {
-        var yy = Y(v);
-        out.push('<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + yy + '" y2="' + yy + '"/><text x="' + (pl - 6) + '" y="' + (yy + 4) + '" text-anchor="end">' + fmt(v, v % 1 ? 1 : 0) + "</text>");
-      }
-      out.push("</g>");
-      out.push('<text class="wm" x="' + (pl + iw / 2).toFixed(0) + '" y="' + (pt + Math.min(ih * 0.2, 60) + 20).toFixed(0) + '" text-anchor="middle" font-size="' + Math.max(26, Math.min(64, iw / 9)).toFixed(0) + '">NBA-LAB</text>');
-      // separadores de temporada
-      for (var i = 1; i < n; i++) {
-        if (shown[i].s !== shown[i - 1].s) {
-          var sx = pl + i * bw;
-          out.push('<line class="sep" x1="' + sx + '" x2="' + sx + '" y1="' + pt + '" y2="' + (pt + ih) + '"/><text class="sep-t" x="' + (sx + 4) + '" y="' + (pt + 10) + '">' + esc(shown[i].s) + "</text>");
-        }
-      }
-      // barras
-      var gap = n > 60 ? 0.18 : 0.26;
-      xs.forEach(function (x, i2) {
-        var bx = pl + i2 * bw + bw * gap / 2, w2 = Math.max(1, bw * (1 - gap));
-        if (x == null) { out.push('<rect class="bar p" data-i="' + i2 + '" x="' + bx.toFixed(1) + '" y="' + (pt + ih - 2) + '" width="' + w2.toFixed(1) + '" height="2"/>'); return; }
-        var y0 = Y(Math.max(0, x)), hh = Math.max(2, pt + ih - y0);
-        var c = x > line ? "o" : x < line ? "u" : "p";
-        out.push('<rect class="bar ' + c + '" data-i="' + i2 + '" x="' + bx.toFixed(1) + '" y="' + (pt + ih - hh).toFixed(1) + '" width="' + w2.toFixed(1) + '" height="' + hh.toFixed(1) + '" rx="' + Math.min(6, w2 / 4).toFixed(1) + '"/>');
-        if (showVals && hh >= 16) out.push('<text class="bar-v" x="' + (bx + w2 / 2).toFixed(1) + '" y="' + (pt + ih - 5).toFixed(1) + '" text-anchor="middle" font-size="' + Math.min(13, w2 * 0.45).toFixed(0) + '">' + fmt(x, s.pct || x % 1 ? 1 : 0) + "</text>");
-      });
-      // fila inferior: rol (T/S) y escudo del rival
-      shown.forEach(function (g, i3) {
-        var cx = pl + (i3 + 0.5) * bw, yb = pt + ih + 4;
-        if (showRole) { out.push('<text class="role-l" x="' + cx.toFixed(1) + '" y="' + (yb + 9) + '" text-anchor="middle">' + (g.st === 1 ? "T" : g.st === 0 ? "S" : "") + "</text>"); yb += 13; }
-        if (showLogos) {
-          var u = logoUrl(g.o);
-          out.push('<text class="logo-t" x="' + cx.toFixed(1) + '" y="' + (yb + logoS / 2 + 3).toFixed(1) + '" text-anchor="middle" font-size="' + Math.max(7, Math.min(10, logoS * 0.4)).toFixed(0) + '">' + esc(g.o) + "</text>");
-          if (u) out.push('<image href="' + u + '" x="' + (cx - logoS / 2).toFixed(1) + '" y="' + yb.toFixed(1) + '" width="' + logoS + '" height="' + logoS + '" preserveAspectRatio="xMidYMid meet" onload="if(this.previousSibling)this.previousSibling.remove()" onerror="this.remove()"/>');
-        }
-      });
-      // línea de minutos (eje derecho)
-      if (showMin) {
-        var mMax = Math.max(48, Math.max.apply(null, shown.map(function (g) { return g.min || 0; })) + 2);
-        var YM = function (m) { return pt + ih - m / mMax * ih; };
-        out.push('<g class="min-axis">');
-        [0, 12, 24, 36, 48].forEach(function (m) { out.push('<text x="' + (W - pr + 6) + '" y="' + (YM(m) + 4).toFixed(1) + '">' + m + "'</text>"); });
-        out.push("</g>");
-        var dp = shown.map(function (g, i4) { return (i4 ? "L" : "M") + (pl + (i4 + 0.5) * bw).toFixed(1) + " " + YM(g.min || 0).toFixed(1); }).join("");
-        out.push('<path class="min-line" d="' + dp + '"/>');
-        if (bw >= 10) shown.forEach(function (g, i5) { out.push('<circle class="min-dot" cx="' + (pl + (i5 + 0.5) * bw).toFixed(1) + '" cy="' + YM(g.min || 0).toFixed(1) + '" r="' + (bw >= 24 ? 3 : 2) + '"/>'); });
-      }
-      // eje x: fechas
-      out.push('<g class="xl">');
-      var stepX = Math.max(1, Math.ceil(n / Math.max(1, Math.floor(iw / 52))));
-      for (var j = 0; j < n; j += stepX) out.push('<text x="' + (pl + (j + 0.5) * bw).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">' + fdate(shown[j].d) + "</text>");
-      out.push("</g>");
-      // líneas de media
-      var a100 = avgOf(s, shown), a20 = avgOf(s, shown.slice(-20)), a10 = avgOf(s, shown.slice(-10));
-      var labs = [];
-      function hline(v, cls, txt, color, fg) {
-        if (v == null) return;
-        var yy2 = Y(Math.min(v, nice));
-        out.push('<line class="' + cls + '" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + yy2.toFixed(1) + '" y2="' + yy2.toFixed(1) + '"/>');
-        labs.push({ y: yy2, t: txt + " " + fmt(v), c: color, f: fg });
-      }
-      hline(a100, "avg a100", "M" + n, "#ffffff", "#0a0b0d");
-      hline(a20, "avg a20", "M20", "#6aa3ff", "#04122e");
-      hline(a10, "avg a10", "M10", "#c08bff", "#1c0738");
-      hline(line, "bet", "LÍN", "#ffd23f", "#2a2000");
-      labs.sort(function (a, b) { return a.y - b.y; });
-      for (var q = 1; q < labs.length; q++) if (labs[q].y - labs[q - 1].y < 17) labs[q].y = labs[q - 1].y + 17;
-      var over = labs.length ? labs[labs.length - 1].y - (pt + ih) : 0;
-      if (over > 0) labs.forEach(function (l) { l.y -= over; });
-      labs.forEach(function (l) {
-        out.push('<g class="lab"><rect x="' + labX + '" y="' + (l.y - 9).toFixed(1) + '" width="' + labW + '" height="18" fill="' + l.c + '"/><text x="' + (labX + 6) + '" y="' + (l.y + 4).toFixed(1) + '" fill="' + l.f + '">' + esc(l.t) + "</text></g>");
-      });
-      out.push('<line class="cursor" x1="0" x2="0" y1="' + pt + '" y2="' + (pt + ih) + '" visibility="hidden"/>');
-      out.push("</svg>");
-      host.innerHTML = out.join("");
-
-      var svg = $("svg", host), cur = $(".cursor", svg), rects = $$(".bar", svg), lastI = -1;
-      function at(e) {
-        var r = svg.getBoundingClientRect();
-        var xv = (e.clientX - r.left) / r.width * W;
-        var i3 = Math.floor((xv - pl) / bw);
-        if (i3 < 0 || i3 >= n) { leave(); return; }
-        if (i3 !== lastI) {
-          if (lastI > -1 && rects[lastI]) rects[lastI].classList.remove("hl");
-          rects[i3].classList.add("hl"); lastI = i3;
-          svg.classList.add("hovering");
-          var cx = pl + (i3 + 0.5) * bw;
-          cur.setAttribute("x1", cx); cur.setAttribute("x2", cx); cur.setAttribute("visibility", "visible");
-        }
-        var g = shown[i3], x = xs[i3];
-        var res = x == null ? "p" : x > line ? "o" : x < line ? "u" : "p";
-        var resT = x == null ? "Sin intentos" : res === "o" ? "OVER" : res === "u" ? "UNDER" : "PUSH";
-        var shot = function (m, a) { return g[m] + "/" + g[a]; };
-        var html = '<div class="tt-top">' + esc(fdate(g.d, true)) + " · " + (g.h ? "vs " : "@ ") + esc(g.o) + " · " + (g.h ? "Local" : "Visitante") + (g.r ? " · " + (g.r === "W" ? "Victoria" : "Derrota") : "") + (g.po ? " · Playoffs" : "") + "</div>" +
-          '<div class="tt-val">' + (x == null ? "—" : fmt(x, s.pct || x % 1 ? 1 : 0)) + ' <small class="' + res + '">' + resT + "</small></div>" +
-          '<div class="tt-line">' + esc(s.s) + " · línea " + fmt(line) + " · " + fmt(g.min, 0) + " min</div>" +
-          '<div class="tt-line">' + g.pts + " PTS · " + g.reb + " REB · " + g.ast + " AST · 3P " + shot("fg3m", "fg3a") + " · TC " + shot("fgm", "fga") + "</div>";
-        var r2 = svg.getBoundingClientRect();
-        var yTop = x == null ? pt + ih : Y(Math.min(Math.max(x, 0), nice));
-        tipShow(html, r2.left + cx2(i3) / W * r2.width, r2.top + yTop / H * r2.height);
-      }
-      function cx2(i4) { return pl + (i4 + 0.5) * bw; }
-      function leave() {
-        if (lastI > -1 && rects[lastI]) rects[lastI].classList.remove("hl");
-        lastI = -1; svg.classList.remove("hovering"); cur.setAttribute("visibility", "hidden"); tipHide();
-      }
-      svg.addEventListener("pointermove", at);
-      svg.addEventListener("pointerdown", at);
-      svg.addEventListener("pointerleave", leave);
-    }
-
     function hitStrip(s, pool, line) {
       var W2 = [["L5", pool.slice(-5)], ["L10", pool.slice(-10)], ["L15", pool.slice(-15)], ["L20", pool.slice(-20)], ["L50", pool.slice(-50)], ["L100", pool.slice(-100)],
         ["TEMP", pool.filter(function (g) { return g.s === season && !g.po; })]];
@@ -949,7 +948,7 @@
         function apply(v) {
           v = Math.max(0, Math.round(v * 2) / 2);
           inp.value = v; st.lines[kk] = v; store(LS_KEY, st.lines);
-          drawBars($(".plot", card), s, shown, v, pool);
+          drawBars($(".plot", card), s, shown, v, pool, st.showMin);
           $(".hit-strip", card).innerHTML = hitStrip(s, pool, v);
           valueOut();
         }
@@ -961,7 +960,7 @@
         });
         $(".hit-strip", card).innerHTML = hitStrip(s, pool, line);
         valueOut();
-        draws.push(function () { drawBars($(".plot", card), s, shown, line, pool); });
+        draws.push(function () { drawBars($(".plot", card), s, shown, line, pool, st.showMin); });
       });
       draws.forEach(function (d) { safe(d, "drawBars"); });
     }
@@ -1142,6 +1141,181 @@
     });
   }
 
+
+  /* =========================================================================
+     PÁGINA DE PARTIDO
+     ========================================================================= */
+  function bootMatch() {
+    var q = new URLSearchParams(location.search);
+    var gid = q.get("g");
+    var G = SCHED ? SCHED.games.filter(function (x) { return x.id === gid; })[0] : null;
+    if (!G) {
+      $("[data-m-title]").innerHTML = "<h1>Partido no encontrado</h1>";
+      $("[data-m-sub]").innerHTML = '<a href="index.html#calendario" style="color:var(--over)">Volver al calendario</a>';
+      return;
+    }
+    var t = madrid(G.utc), fin = G.st === 3;
+    function teamTitle(tm) { return '<span class="m-team">' + (logoUrl(tm.t) ? '<img src="' + logoUrl(tm.t) + '" alt="" onerror="this.remove()">' : "") + "<b>" + esc(tm.t) + "</b>" + (fin ? '<em>' + esc(tm.s) + "</em>" : "") + "</span>"; }
+    $("[data-m-title]").innerHTML = teamTitle(G.a) + '<span class="m-at">@</span>' + teamTitle(G.h);
+    $("[data-m-sub]").textContent = (fin ? "Final" : t.d + " · " + t.h + " (hora España)") + " · " + G.a.t + " " + (teamRec(G.a) || "") + " · " + G.h.t + " " + (teamRec(G.h) || "");
+    document.title = G.a.t + " @ " + G.h.t + " — NBA LAB";
+
+    var MSTATS = ["pts", "reb", "ast", "pra", "pr", "pa", "ra", "fg3m", "fg3a", "stl", "blk", "sb", "tov", "min"];
+    var ms = { team: G.a.t, pos: "all", q: "", pid: q.get("p") || null, stat: "pts", range: 20, loc: "all", tit: true, sup: true, showMin: store("pl-showmin") !== false, lines: {}, odds: {} };
+    function oppOf(team) { return team === G.h.t ? G.a.t : G.h.t; }
+    function isHome(team) { return team === G.h.t ? 1 : 0; }
+    var roster = {};
+    [G.a.t, G.h.t].forEach(function (tm) {
+      roster[tm] = IDX.players.filter(function (p) { return p.t === tm; }).sort(function (a, b) { return (b.avg.min || 0) - (a.avg.min || 0); });
+    });
+    var pinfo = {};
+    IDX.players.forEach(function (p) { pinfo[p.id] = p; });
+    if (ms.pid && pinfo[ms.pid]) ms.team = pinfo[ms.pid].t;
+
+    // pestañas de equipo
+    var teamsEl = $("[data-m-teams]");
+    teamsEl.innerHTML = [G.a.t, G.h.t].map(function (tm) {
+      return '<button type="button" data-t="' + tm + '">' + (logoUrl(tm) ? '<img src="' + logoUrl(tm) + '" alt="" onerror="this.remove()">' : "") + esc(tm) + "<small>" + (tm === G.h.t ? "Local" : "Visitante") + "</small></button>";
+    }).join("");
+    function syncTeams() { $$("button", teamsEl).forEach(function (b) { b.classList.toggle("on", b.dataset.t === ms.team && !ms.q); }); }
+    teamsEl.addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      ms.team = b.dataset.t; ms.q = ""; $("[data-m-search]").value = ""; syncTeams(); renderList();
+    });
+    $("[data-m-pos]").addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      $$("[data-m-pos] button").forEach(function (x) { x.classList.toggle("on", x === b); });
+      ms.pos = b.dataset.v; renderList();
+    });
+    $("[data-m-search]").addEventListener("input", function (e) { ms.q = normTxt(e.target.value.trim()); syncTeams(); renderList(); });
+
+    // lista de jugadores
+    function renderList() {
+      var listEl = $("[data-m-list]");
+      var src = ms.q ? roster[G.a.t].concat(roster[G.h.t]) : roster[ms.team];
+      var list = src.filter(function (p) {
+        var c = String(p.p || "").charAt(0).toUpperCase();
+        return (ms.pos === "all" || c === ms.pos) && (!ms.q || normTxt(p.n).indexOf(ms.q) > -1);
+      });
+      var stat = STAT[ms.stat];
+      $("[data-m-note]").textContent = stat.s + " · últimos 5 partidos" + (ms.q ? " · buscando en " + G.a.t + " y " + G.h.t : "");
+      if (!list.length) { listEl.innerHTML = '<p class="empty small">Ningún jugador coincide.</p>'; return; }
+      listEl.innerHTML = list.map(function (p) {
+        var tl = teamLastOf(p.t), baja = tl && p.last < tl;
+        var ser = idxSeries(p, ms.stat).slice(-5), ref = lineDefault(idxAvg(p, ms.stat));
+        var chips = ser.map(function (v) { return '<i class="' + (v > ref ? "o" : "u") + '">' + fmt(v, v % 1 ? 1 : 0) + "</i>"; }).join("");
+        var role = p.gsn ? '<em class="role-tag mono">' + (p.gs / p.gsn >= 0.5 ? "TIT" : "SUP") + "</em>" : "";
+        return '<button type="button" class="m-item' + (String(p.id) === String(ms.pid) ? " on" : "") + (baja ? " is-out" : "") + '" data-id="' + p.id + '">' +
+          photoHTML(p) + '<span class="m-item-body"><b>' + esc(p.n) + "</b><small>" + (ms.q ? esc(p.t) + " · " : "") + esc(p.p || "—") + " " + role + (baja ? ' <em class="out-tag mono">POSIBLE BAJA</em>' : "") + "</small>" +
+          '<span class="m-chips">' + chips + "</span></span></button>";
+      }).join("");
+    }
+    $("[data-m-list]").addEventListener("click", function (e) {
+      var b = e.target.closest(".m-item"); if (!b) return;
+      selectPlayer(b.dataset.id);
+      if (window.innerWidth < 900) { var m = $(".m-main"); window.scrollTo({ top: m.getBoundingClientRect().top + window.pageYOffset - 70, behavior: "smooth" }); }
+    });
+
+    // estadísticas (chips)
+    var statsEl = $("[data-m-stats]");
+    statsEl.innerHTML = MSTATS.map(function (k2) { return '<button type="button" class="chip" data-k="' + k2 + '" title="' + esc(STAT[k2].l) + '">' + esc(STAT[k2].s) + "</button>"; }).join("");
+    function syncStats() { $$(".chip", statsEl).forEach(function (c) { c.classList.toggle("on", c.dataset.k === ms.stat); }); }
+    statsEl.addEventListener("click", function (e) {
+      var c = e.target.closest(".chip"); if (!c) return;
+      ms.stat = c.dataset.k; syncStats(); renderList(); renderChart();
+    });
+    function seg2(sel, key) {
+      $(sel).addEventListener("click", function (e) {
+        var b = e.target.closest("button"); if (!b) return;
+        $$(sel + " button").forEach(function (x) { x.classList.toggle("on", x === b); });
+        ms[key] = key === "range" ? +b.dataset.v : b.dataset.v; renderChart();
+      });
+    }
+    seg2("[data-m-range]", "range"); seg2("[data-m-loc]", "loc");
+    $$("[data-m-role] [data-role]").forEach(function (c) {
+      c.addEventListener("change", function () {
+        ms[c.dataset.role] = c.checked;
+        if (!ms.tit && !ms.sup) { ms.tit = ms.sup = true; $$("[data-m-role] [data-role]").forEach(function (x) { x.checked = true; }); }
+        renderChart();
+      });
+    });
+    var smc = $("[data-m-showmin]"); smc.checked = ms.showMin;
+    smc.addEventListener("change", function () { ms.showMin = smc.checked; store("pl-showmin", ms.showMin); renderChart(); });
+    var lineInp = $("[data-m-line]");
+    function setLine(v) { v = Math.max(0, Math.round(v * 2) / 2); ms.lines[ms.pid + ms.stat] = v; renderChart(); }
+    lineInp.addEventListener("change", function () { setLine(parseFloat(String(lineInp.value).replace(",", ".")) || 0); });
+    $$("[data-m-card] [data-d]").forEach(function (b) { b.addEventListener("click", function () { setLine((parseFloat(lineInp.value) || 0) + (+b.dataset.d)); }); });
+    $$("[data-m-card] [data-odd]").forEach(function (oi) { oi.addEventListener("input", function () { ms.odds[oi.dataset.odd] = oi.value; renderValue(); }); });
+
+    var cur = null; // { P, games }
+    function selectPlayer(id) {
+      ms.pid = String(id);
+      $$(".m-item").forEach(function (b) { b.classList.toggle("on", b.dataset.id === ms.pid); });
+      try { history.replaceState(null, "", "partido.html?g=" + encodeURIComponent(gid) + "&p=" + ms.pid); } catch (_) {}
+      var have = (window.__NBA_PLAYERS__ || {})[id];
+      var go = function () {
+        var P = (window.__NBA_PLAYERS__ || {})[id];
+        if (!P) { $("[data-m-player]").innerHTML = '<p class="empty">No se pudieron cargar los partidos de este jugador.</p>'; return; }
+        cur = { P: P, games: P.games.slice().sort(function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; }) };
+        ms.odds = {}; $$("[data-m-card] [data-odd]").forEach(function (oi) { oi.value = ""; });
+        renderChart();
+      };
+      if (have) go(); else loadScript("data/players/" + encodeURIComponent(id) + ".js?v=" + encodeURIComponent(IDX.updated || "1")).then(go, go);
+    }
+
+    function pool() {
+      return cur.games.filter(function (g) {
+        return (ms.loc === "all" || String(g.h) === ms.loc) && (ms.tit && ms.sup ? true : ms.tit ? g.st === 1 : g.st === 0);
+      });
+    }
+    function renderValue() {
+      if (!cur) return;
+      var s = STAT[ms.stat], pl = pool(), shown = pl.slice(-ms.range), L = parseFloat(lineInp.value) || 0;
+      var xs = vals(s, shown), n = xs.length, o = xs.filter(function (x) { return x > L; }).length, u = xs.filter(function (x) { return x < L; }).length, out = [];
+      [["o", "Over", o], ["u", "Under", u]].forEach(function (k2) {
+        var odd = parseFloat(String(ms.odds[k2[0]] || "").replace(",", "."));
+        if (!odd || odd <= 1 || !n) return;
+        var pr = k2[2] / n, ev = pr * odd - 1;
+        var cls = ev > 0.05 ? "val-yes" : ev < -0.05 ? "val-no" : "val-eq";
+        out.push('<span class="val ' + cls + '"><b>' + k2[1] + " " + fmt(L) + " @ " + fmt(odd, 2) + "</b> · implícita " + Math.round(100 / odd) + "% · real " + Math.round(pr * 100) + "% (" + k2[2] + "/" + n + ") · EV " + (ev > 0 ? "+" : "") + Math.round(ev * 100) + "% · " + (ev > 0.05 ? "✅ VALOR" : ev < -0.05 ? "❌ sin valor" : "≈ justa") + "</span>");
+      });
+      $("[data-m-value]").innerHTML = out.length ? out.join("") : '<span class="mono muted small">Escribe la cuota y te digo si hay valor según los ' + n + " partidos mostrados.</span>";
+    }
+    function renderChart() {
+      if (!cur) return;
+      var P = cur.P, s = STAT[ms.stat], pl = pool(), shown = pl.slice(-ms.range);
+      var opp = oppOf(P.t), home = isHome(P.t);
+      var L = ms.lines[ms.pid + ms.stat];
+      if (L == null) L = lineDefault(avgOf(s, pl.slice(-20)));
+      lineInp.value = L;
+      var h = hitOf(s, shown, L), mAvg = avgOf(STAT.min, shown);
+      $("[data-m-player]").innerHTML = photoHTML(P, "m-photo") +
+        '<div class="m-pinfo"><h2>' + esc(P.n) + '</h2><p class="mono">' + esc([P.t, P.p, P.j ? "#" + P.j : ""].filter(Boolean).join(" · ")) + " · " + esc(s.l) + " · últimos " + shown.length + "</p></div>" +
+        '<div class="m-sum"><div><span>Media gráfico</span><b>' + fmt(avgOf(s, shown)) + "</b></div>" +
+        '<div><span>Hit rate</span><b style="color:' + (h && h.p >= 50 ? "var(--over)" : "var(--under)") + '">' + (h ? Math.round(h.p) + "% <small>(" + h.o + "/" + h.n + ")</small>" : "—") + "</b></div>" +
+        "<div><span>Min. medios</span><b>" + fmt(mAvg) + "</b></div></div>";
+      $("[data-m-chart-title]").innerHTML = esc(s.l) + "<small>" + shown.length + " partidos" + (ms.loc !== "all" ? (ms.loc === "1" ? " · local" : " · visitante") : "") + (!(ms.tit && ms.sup) ? (ms.tit ? " · titular" : " · suplente") : "") + "</small>";
+      var season = IDX.season, W2 = [["L5", pl.slice(-5)], ["L10", pl.slice(-10)], ["L15", pl.slice(-15)], ["L20", pl.slice(-20)],
+        ["TEMP", pl.filter(function (g) { return g.s === season && !g.po; })],
+        [home ? "LOCAL" : "VISIT.", cur.games.filter(function (g) { return g.h === home && g.s === season; })],
+        ["VS " + opp, cur.games.filter(function (g) { return g.o === opp; })]];
+      $("[data-m-hits]").innerHTML = W2.map(function (w) {
+        var hh = hitOf(s, w[1], L);
+        return '<div class="hit"><span>' + esc(w[0]) + "</span>" + (hh ? '<b style="color:' + (hh.p >= 50 ? "var(--over)" : "var(--under)") + '">' + Math.round(hh.p) + "%</b><em>" + hh.o + "/" + hh.n + "</em>" : "<b>—</b>") + "</div>";
+      }).join("");
+      $("[data-m-full]").href = pUrl(P.id) + "&vs=" + encodeURIComponent(opp);
+      if (!shown.length) { $("[data-m-plot]").innerHTML = '<p class="empty">No hay partidos con estos filtros.</p>'; }
+      else drawBars($("[data-m-plot]"), s, shown, L, pl, ms.showMin);
+      renderValue();
+    }
+
+    syncTeams(); syncStats(); renderList();
+    var first = ms.pid && pinfo[ms.pid] ? ms.pid : (roster[ms.team][0] || roster[G.h.t][0] || {}).id;
+    if (first) selectPlayer(first);
+    var rz = 0, lw = window.innerWidth;
+    window.addEventListener("resize", function () { tipHide(); clearTimeout(rz); rz = setTimeout(function () { if (Math.abs(window.innerWidth - lw) > 30) { lw = window.innerWidth; renderChart(); } }, 200); });
+  }
+
   /* =========================================================================
      Arranque
      ========================================================================= */
@@ -1165,6 +1339,8 @@
       }
     } else if (page === "player") {
       safe(bootPlayer, "player");
+    } else if (page === "match") {
+      safe(bootMatch, "match");
     }
     safe(initReveals, "reveals");
     document.documentElement.classList.add("is-ready");
