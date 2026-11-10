@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261110c" />
+  <link rel="stylesheet" href="styles.css?v=20261110d" />
 </head>
 <body data-page="match">
   <header class="nav" data-nav>
@@ -48,11 +48,22 @@
           <div class="seg" data-m-range><button data-v="5">L5</button><button data-v="10">L10</button><button data-v="15">L15</button><button data-v="20" class="on">L20</button><button data-v="50">L50</button><button data-v="100">L100</button></div>
           <div class="seg" data-m-loc><button data-v="all" class="on">Local + Visit.</button><button data-v="1">Local</button><button data-v="0">Visitante</button></div>
           <div class="role-box" data-m-role>
+            <span class="mono tb-lbl">Rol</span>
             <label class="check"><input type="checkbox" data-role="tit" checked /> Titular</label>
             <label class="check"><input type="checkbox" data-role="sup" checked /> Suplente</label>
           </div>
-          <label class="check"><input type="checkbox" data-m-showmin checked /> Minutos</label>
+          <select class="input" data-m-opp aria-label="Rival"><option value="all">Todos los rivales</option></select>
+          <label class="check"><input type="checkbox" data-m-po checked /> Incluir playoffs</label>
+          <label class="check"><input type="checkbox" data-m-showmin checked /> Línea de minutos</label>
         </div>
+        <div class="toolbar m-tools">
+          <div class="mate-box" data-m-mate-box>
+            <span class="mono tb-lbl">Compañero</span>
+            <div class="seg" data-m-mate-mode><button data-v="con">Con</button><button data-v="sin" class="on">Sin</button></div>
+            <select class="input" data-m-mate aria-label="Compañero"><option value="">— Ninguno —</option></select>
+          </div>
+        </div>
+        <p class="filter-note mono" data-m-filter-note></p>
         <article class="card chart-card" data-m-card>
           <div class="chart-head">
             <h3 data-m-chart-title>—</h3>
@@ -83,6 +94,6 @@
   <script defer src="lib/manifest.js?v=20261109d"></script>
   <script defer src="data/schedule.js?v=20261109"></script>
   <script defer src="data/index.js?v=20261109"></script>
-  <script defer src="main.js?v=20261110c"></script>
+  <script defer src="main.js?v=20261110d"></script>
 </body>
 </html>

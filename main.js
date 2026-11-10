@@ -414,7 +414,7 @@
     // barras
     var gap = n > 60 ? 0.18 : 0.26;
     xs.forEach(function (x, i2) {
-      var bx = pl + i2 * bw + bw * gap / 2, w2 = Math.max(1, bw * (1 - gap));
+      var w2 = Math.max(1, Math.min(64, bw * (1 - gap))), bx = pl + (i2 + 0.5) * bw - w2 / 2;
       if (x == null) { out.push('<rect class="bar p" data-i="' + i2 + '" x="' + bx.toFixed(1) + '" y="' + (pt + ih - 2) + '" width="' + w2.toFixed(1) + '" height="2"/>'); return; }
       var y0 = Y(Math.max(0, x)), hh = Math.max(2, pt + ih - y0);
       var c = x > line ? "o" : x < line ? "u" : "p";
@@ -1161,7 +1161,7 @@
     document.title = G.a.t + " @ " + G.h.t + " — NBA LAB";
 
     var MSTATS = ["pts", "reb", "ast", "pra", "pr", "pa", "ra", "fg3m", "fg3a", "stl", "blk", "sb", "tov", "min"];
-    var ms = { team: G.a.t, pos: "all", q: "", pid: q.get("p") || null, stat: "pts", range: 20, loc: "all", tit: true, sup: true, showMin: store("pl-showmin") !== false, lines: {}, odds: {} };
+    var ms = { team: G.a.t, pos: "all", q: "", pid: q.get("p") || null, stat: "pts", range: 20, loc: "all", opp: "all", po: true, mate: "", mateMode: "sin", tit: true, sup: true, showMin: store("pl-showmin") !== false, lines: {}, odds: {} };
     function oppOf(team) { return team === G.h.t ? G.a.t : G.h.t; }
     function isHome(team) { return team === G.h.t ? 1 : 0; }
     var roster = {};
@@ -1170,7 +1170,7 @@
     });
     var pinfo = {};
     IDX.players.forEach(function (p) { pinfo[p.id] = p; });
-    if (ms.pid && pinfo[ms.pid]) ms.team = pinfo[ms.pid].t;
+    if (ms.pid && pinfo[ms.pid] && roster[pinfo[ms.pid].t]) ms.team = pinfo[ms.pid].t; else ms.pid = null;
 
     // pestañas de equipo
     var teamsEl = $("[data-m-teams]");
@@ -1239,6 +1239,65 @@
         renderChart();
       });
     });
+    var oppSel = $("[data-m-opp]"), mateSel = $("[data-m-mate]");
+    oppSel.addEventListener("change", function () { ms.opp = oppSel.value; renderChart(); });
+    $("[data-m-po]").addEventListener("change", function (e) { ms.po = e.target.checked; renderChart(); });
+    mateSel.addEventListener("change", function () { ms.mate = mateSel.value; renderChart(); });
+    seg2("[data-m-mate-mode]", "mateMode");
+    var mateRange = {};
+    function mateOK(g) {
+      if (!ms.mate) return true;
+      var id = +ms.mate, has = (g.tm || []).indexOf(id) > -1;
+      if (ms.mateMode === "con") return has;
+      var r = mateRange[id], mi = pinfo[id];
+      if (!r || g.t !== cur.P.t) return false;
+      var end = mi && mi.t === cur.P.t ? "9999-12-31" : r[1];
+      return !has && g.d >= r[0] && g.d <= end;
+    }
+    function setupPlayerFilters() {
+      var P = cur.P, gs = cur.games;
+      // rivales
+      var cnt = {};
+      gs.forEach(function (g) { cnt[g.o] = (cnt[g.o] || 0) + 1; });
+      oppSel.innerHTML = '<option value="all">Todos los rivales</option>' + Object.keys(cnt).sort().map(function (o) {
+        return '<option value="' + esc(o) + '">vs ' + esc(o) + " (" + cnt[o] + ")" + (o === oppOf(P.t) ? " · rival de hoy" : "") + "</option>";
+      }).join("");
+      if (ms.opp !== "all" && !cnt[ms.opp]) ms.opp = "all";
+      oppSel.value = ms.opp;
+      // compañeros
+      mateRange = {};
+      gs.forEach(function (g) {
+        (g.tm || []).forEach(function (id) {
+          var r = mateRange[id];
+          if (!r) mateRange[id] = [g.d, g.d]; else { if (g.d < r[0]) r[0] = g.d; if (g.d > r[1]) r[1] = g.d; }
+        });
+      });
+      ms.mate = "";
+      var box = $("[data-m-mate-box]");
+      if (!gs.some(function (g) { return g.tm && g.tm.length; })) { mateSel.innerHTML = '<option value="">Sin datos de compañeros</option>'; mateSel.disabled = true; return; }
+      mateSel.disabled = false;
+      var tl = teamLastOf(P.t), oldMode = ms.mateMode, opts = '<option value="">— Ninguno —</option>';
+      IDX.players.filter(function (p) { return p.t === P.t && String(p.id) !== String(P.id); })
+        .sort(function (a, b) { return (b.avg.min || 0) - (a.avg.min || 0); })
+        .forEach(function (p) {
+          var con = gs.filter(function (g) { return (g.tm || []).indexOf(p.id) > -1; }).length;
+          ms.mate = String(p.id); ms.mateMode = "sin";
+          var sin = gs.filter(mateOK).length;
+          var baja = tl && p.last < tl;
+          opts += '<option value="' + p.id + '">' + esc(p.n) + (baja ? " ⚠ posible baja" : "") + " · con " + con + " / sin " + sin + "</option>";
+        });
+      ms.mate = ""; ms.mateMode = oldMode;
+      mateSel.innerHTML = opts;
+      if (box) box.hidden = false;
+    }
+    function filterNote() {
+      var parts = [];
+      if (ms.opp !== "all") parts.push("vs " + ms.opp);
+      if (!ms.po) parts.push("sin playoffs");
+      if (!(ms.tit && ms.sup)) parts.push(ms.tit ? "solo titular" : "solo suplente");
+      if (ms.mate && pinfo[ms.mate]) parts.push((ms.mateMode === "con" ? "con " : "sin ") + pinfo[ms.mate].n);
+      return parts.join(" · ");
+    }
     var smc = $("[data-m-showmin]"); smc.checked = ms.showMin;
     smc.addEventListener("change", function () { ms.showMin = smc.checked; store("pl-showmin", ms.showMin); renderChart(); });
     var lineInp = $("[data-m-line]");
@@ -1257,6 +1316,7 @@
         var P = (window.__NBA_PLAYERS__ || {})[id];
         if (!P) { $("[data-m-player]").innerHTML = '<p class="empty">No se pudieron cargar los partidos de este jugador.</p>'; return; }
         cur = { P: P, games: P.games.slice().sort(function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; }) };
+        setupPlayerFilters();
         ms.odds = {}; $$("[data-m-card] [data-odd]").forEach(function (oi) { oi.value = ""; });
         renderChart();
       };
@@ -1265,7 +1325,8 @@
 
     function pool() {
       return cur.games.filter(function (g) {
-        return (ms.loc === "all" || String(g.h) === ms.loc) && (ms.tit && ms.sup ? true : ms.tit ? g.st === 1 : g.st === 0);
+        return (ms.po || !g.po) && (ms.opp === "all" || g.o === ms.opp) && (ms.loc === "all" || String(g.h) === ms.loc) &&
+          (ms.tit && ms.sup ? true : ms.tit ? g.st === 1 : g.st === 0) && mateOK(g);
       });
     }
     function renderValue() {
@@ -1294,7 +1355,9 @@
         '<div class="m-sum"><div><span>Media gráfico</span><b>' + fmt(avgOf(s, shown)) + "</b></div>" +
         '<div><span>Hit rate</span><b style="color:' + (h && h.p >= 50 ? "var(--over)" : "var(--under)") + '">' + (h ? Math.round(h.p) + "% <small>(" + h.o + "/" + h.n + ")</small>" : "—") + "</b></div>" +
         "<div><span>Min. medios</span><b>" + fmt(mAvg) + "</b></div></div>";
-      $("[data-m-chart-title]").innerHTML = esc(s.l) + "<small>" + shown.length + " partidos" + (ms.loc !== "all" ? (ms.loc === "1" ? " · local" : " · visitante") : "") + (!(ms.tit && ms.sup) ? (ms.tit ? " · titular" : " · suplente") : "") + "</small>";
+      var fnote = filterNote();
+      $("[data-m-chart-title]").innerHTML = esc(s.l) + "<small>" + shown.length + " partidos" + (ms.loc !== "all" ? (ms.loc === "1" ? " · local" : " · visitante") : "") + (fnote ? " · " + esc(fnote) : "") + "</small>";
+      $("[data-m-filter-note]").textContent = fnote ? "Filtro activo: " + fnote + " · " + pl.length + " partidos" : "";
       var season = IDX.season, W2 = [["L5", pl.slice(-5)], ["L10", pl.slice(-10)], ["L15", pl.slice(-15)], ["L20", pl.slice(-20)],
         ["TEMP", pl.filter(function (g) { return g.s === season && !g.po; })],
         [home ? "LOCAL" : "VISIT.", cur.games.filter(function (g) { return g.h === home && g.s === season; })],
