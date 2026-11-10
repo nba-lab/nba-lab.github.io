@@ -308,7 +308,13 @@
       });
       list.sort(function (a, b) { return so === "n" ? a.n.localeCompare(b.n) : idxAvg(b, so) - idxAvg(a, so); });
       $("[data-grid-empty]").hidden = list.length > 0;
-      grid.innerHTML = list.slice(0, 120).map(function (p) {
+      var filtering = !!(q || t || pos);
+      var shown = filtering ? list.slice(0, 60) : list.slice(0, 10);
+      var note = $("[data-grid-note]");
+      if (note) note.textContent = filtering
+        ? (list.length > 60 ? "Mostrando 60 de " + list.length + " jugadores. Afina la búsqueda para ver el resto." : "")
+        : "Mostrando los 10 primeros. Usa el buscador o los filtros para encontrar a cualquier jugador.";
+      grid.innerHTML = shown.map(function (p) {
         var s10 = idxSeries(p, "pts").slice(-10);
         return '<a class="p-card" href="' + pUrl(p.id) + '">' +
           '<div class="p-card-top">' + photoHTML(p) + "<div><h3>" + esc(p.n) + '</h3><div class="meta">' + esc(p.t) + " · " + esc(p.p || "—") + (p.j ? " · #" + esc(p.j) : "") + " · " + (p.gp || 0) + " PJ</div></div></div>" +
