@@ -412,6 +412,14 @@
     }
     return null;
   }
+  var TEAM_ID = { ATL: 1610612737, BOS: 1610612738, CLE: 1610612739, NOP: 1610612740, CHI: 1610612741, DAL: 1610612742, DEN: 1610612743, GSW: 1610612744, HOU: 1610612745, LAC: 1610612746, LAL: 1610612747, MIA: 1610612748, MIL: 1610612749, MIN: 1610612750, BKN: 1610612751, NYK: 1610612752, ORL: 1610612753, IND: 1610612754, PHI: 1610612755, PHX: 1610612756, POR: 1610612757, SAC: 1610612758, SAS: 1610612759, OKC: 1610612760, TOR: 1610612761, UTA: 1610612762, MEM: 1610612763, WAS: 1610612764, DET: 1610612765, CHA: 1610612766 };
+  function logoUrl(t) { return TEAM_ID[t] ? "https://cdn.nba.com/logos/nba/" + TEAM_ID[t] + "/global/L/logo.svg" : ""; }
+  function teamLastOf(team) {
+    var l = "";
+    IDX.players.forEach(function (p) { if (p.t === team && p.last > l) l = p.last; });
+    return l;
+  }
+  function normTxt(s) { return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
   function teamRec(t) { return (t.w != null && t.l != null && (t.w + t.l) > 0) ? t.w + "-" + t.l : ""; }
 
   function mountCalendar() {
@@ -439,16 +447,27 @@
       }
       daysEl.innerHTML = html;
     }
+    var POS_GROUPS = [["G", "Bases y escoltas"], ["F", "Aleros y ala-pívots"], ["C", "Pívots"], ["O", "Sin posición"]];
     function playerRows(team, opp) {
-      var ps = IDX.players.filter(function (p) { return p.t === team; }).sort(function (a, b) { return (b.avg.min || 0) - (a.avg.min || 0); }).slice(0, 13);
+      var tl = teamLastOf(team);
+      var ps = IDX.players.filter(function (p) { return p.t === team; }).sort(function (a, b) { return (b.avg.min || 0) - (a.avg.min || 0); });
       if (!ps.length) return '<p class="empty small">Sin jugadores de este equipo en los datos.</p>';
-      return '<div class="roster-head mono"><span>Jugador</span><span>MIN</span><span>PTS</span><span>REB</span><span>AST</span><span>3PM</span><span>PRA</span></div>' +
-        ps.map(function (p) {
-          var a = p.avg;
-          return '<a class="roster-row" href="' + pUrl(p.id) + "&vs=" + encodeURIComponent(opp) + '">' +
-            '<span class="player-cell">' + photoHTML(p) + "<span>" + esc(p.n) + "<small>" + esc(p.p || "—") + (p.j ? " · #" + esc(p.j) : "") + "</small></span></span>" +
-            "<span>" + fmt(a.min) + "</span><span><b>" + fmt(a.pts) + "</b></span><span>" + fmt(a.reb) + "</span><span>" + fmt(a.ast) + "</span><span>" + fmt(a.fg3m) + "</span><span>" + fmt(a.pts + a.reb + a.ast) + "</span></a>";
-        }).join("");
+      var head = '<div class="roster-head mono"><span>Jugador</span><span>MIN</span><span>PTS</span><span>REB</span><span>AST</span><span>3PM</span><span>PRA</span></div>';
+      return POS_GROUPS.map(function (grp) {
+        var list = ps.filter(function (p) { var c = String(p.p || "").charAt(0).toUpperCase(); return grp[0] === "O" ? "GFC".indexOf(c) < 0 || !c : c === grp[0]; });
+        if (!list.length) return "";
+        return '<div class="pos-group"><p class="pos-title mono">' + grp[1] + " · " + list.length + "</p>" + head +
+          list.map(function (p) {
+            var a = p.avg, baja = tl && p.last < tl;
+            var dm = (a.min5 != null && a.min != null) ? a.min5 - a.min : 0;
+            var arrow = Math.abs(dm) >= 3 ? (dm > 0 ? ' <i class="trend-up" title="Minutos últimos 5: ' + fmt(a.min5) + '">▲</i>' : ' <i class="trend-down" title="Minutos últimos 5: ' + fmt(a.min5) + '">▼</i>') : "";
+            var role = p.gsn ? '<em class="role-tag mono">' + (p.gs / p.gsn >= 0.5 ? "TIT" : "SUP") + " " + p.gs + "/" + p.gsn + "</em>" : "";
+            return '<a class="roster-row' + (baja ? " is-out" : "") + '" data-name="' + esc(normTxt(p.n)) + '" href="' + pUrl(p.id) + "&vs=" + encodeURIComponent(opp) + '">' +
+              '<span class="player-cell">' + photoHTML(p) + "<span>" + esc(p.n) + "<small>" + esc(p.p || "—") + (p.j ? " · #" + esc(p.j) : "") + " " + role +
+              (baja ? ' <em class="out-tag mono">POSIBLE BAJA</em>' : "") + "</small></span></span>" +
+              "<span>" + fmt(a.min) + arrow + "</span><span><b>" + fmt(a.pts) + "</b></span><span>" + fmt(a.reb) + "</span><span>" + fmt(a.ast) + "</span><span>" + fmt(a.fg3m) + "</span><span>" + fmt(a.pts + a.reb + a.ast) + "</span></a>";
+          }).join("") + "</div>";
+      }).join("");
     }
     function renderGames() {
       var gs = by[sel] || [];
@@ -485,9 +504,17 @@
       panel.className = "game-panel";
       var t = madrid(g.utc);
       panel.innerHTML = '<div class="gp-head"><b>' + esc(g.a.t) + " @ " + esc(g.h.t) + '</b><span class="mono">' + (g.st === 3 ? "Final · " + g.a.s + "-" + g.h.s : esc(t.d + " · " + t.h + " (hora España)")) + "</span></div>" +
+        '<div class="gp-search"><input type="search" class="input" placeholder="Buscar jugador en ' + esc(g.a.t) + " o " + esc(g.h.t) + '…" aria-label="Buscar jugador en el partido" data-gp-search /><span class="mono gp-legend"><em class="out-tag">POSIBLE BAJA</em> no jugó el último partido de su equipo · ▲▼ cambio de minutos</span></div>' +
         '<div class="gp-cols"><div><h4><span class="mono">Visitante</span> ' + esc(g.a.t) + "</h4>" + playerRows(g.a.t, g.h.t) + "</div>" +
         '<div><h4><span class="mono">Local</span> ' + esc(g.h.t) + "</h4>" + playerRows(g.h.t, g.a.t) + "</div></div>";
       last.insertAdjacentElement("afterend", panel);
+      var gsInp = $("[data-gp-search]", panel);
+      gsInp.addEventListener("click", function (e) { e.stopPropagation(); });
+      gsInp.addEventListener("input", function () {
+        var q = normTxt(gsInp.value.trim());
+        $$(".roster-row", panel).forEach(function (r) { r.hidden = !!q && r.dataset.name.indexOf(q) < 0; });
+        $$(".pos-group", panel).forEach(function (gr) { gr.hidden = !$$(".roster-row", gr).some(function (r) { return !r.hidden; }); });
+      });
       var y = btn.getBoundingClientRect().top + window.pageYOffset - 80;
       if (Math.abs(window.pageYOffset - y) > 300) window.scrollTo({ top: y, behavior: "smooth" });
     }
@@ -497,6 +524,7 @@
       sel = b.dataset.d; renderDays(); renderGames();
     });
     gamesEl.addEventListener("click", function (e) {
+      if (e.target.closest(".game-panel")) return;
       var b = e.target.closest(".game");
       if (b) openGame(b);
     });
@@ -556,7 +584,7 @@
     var LS_KEY = "pl-lines-" + P.id;
     var st = {
       stats: store("pl-stats") || ["pts", "reb", "ast"],
-      range: 100, loc: "all", opp: "all", po: true,
+      range: 100, loc: "all", opp: "all", po: true, tit: true, sup: true, mate: "", mateMode: "sin", odds: {}, showMin: store("pl-showmin") !== false,
       lines: store(LS_KEY) || {}, sample: "l100", evo: "pts", evoW: 5, ladder: "pts"
     };
     st.stats = st.stats.filter(function (kk) { return STAT[kk]; });
@@ -591,7 +619,7 @@
 
     /* --- medias por tramo --- */
     (function avgTable() {
-      var W = [["Temp", seasonG], ["L5", games.slice(-5)], ["L10", games.slice(-10)], ["L20", games.slice(-20)], ["L50", games.slice(-50)], ["L100", last100]];
+      var W = [["Temp", seasonG], ["L5", games.slice(-5)], ["L10", games.slice(-10)], ["L15", games.slice(-15)], ["L20", games.slice(-20)], ["L50", games.slice(-50)], ["L100", last100]];
       var h = "<thead><tr><th>Estadística</th>" + W.map(function (w) { return "<th>" + w[0] + "</th>"; }).join("") + "<th>Máx</th><th>Mín</th><th>Tend.</th></tr></thead><tbody>";
       MAIN.forEach(function (kk) {
         var s = STAT[kk], xs = vals(s, last100);
@@ -653,11 +681,73 @@
     oppSel.addEventListener("change", function () { st.opp = oppSel.value; renderCharts(); });
     $("[data-po]").addEventListener("change", function (e) { st.po = e.target.checked; renderCharts(); });
 
+    var hasRole = games.some(function (g) { return g.st === 0 || g.st === 1; });
+    var hasMates = games.some(function (g) { return g.tm && g.tm.length; });
+    var mateRange = {};
+    games.forEach(function (g) {
+      (g.tm || []).forEach(function (id) {
+        var r = mateRange[id];
+        if (!r) mateRange[id] = [g.d, g.d]; else { if (g.d < r[0]) r[0] = g.d; if (g.d > r[1]) r[1] = g.d; }
+      });
+    });
+    var mateInfo = {};
+    IDX.players.forEach(function (p) { mateInfo[p.id] = p; });
+    function mateOK(g) {
+      if (!st.mate) return true;
+      var id = +st.mate, has = (g.tm || []).indexOf(id) > -1;
+      if (st.mateMode === "con") return has;
+      var r = mateRange[id], mi = mateInfo[id];
+      if (!r || g.t !== P.t) return false;
+      var end = mi && mi.t === P.t ? "9999-12-31" : r[1];
+      return !has && g.d >= r[0] && g.d <= end;
+    }
+    function roleOK(g) {
+      if (st.tit && st.sup) return true;
+      return st.tit ? g.st === 1 : g.st === 0;
+    }
     function filtered() {
       return games.filter(function (g) {
-        return (st.po || !g.po) && (st.loc === "all" || String(g.h) === st.loc) && (st.opp === "all" || g.o === st.opp);
+        return (st.po || !g.po) && (st.loc === "all" || String(g.h) === st.loc) && (st.opp === "all" || g.o === st.opp) && roleOK(g) && mateOK(g);
       });
     }
+    function filterLabel() {
+      var parts = [];
+      if (!(st.tit && st.sup)) parts.push(st.tit ? "solo como titular" : "solo como suplente");
+      if (st.mate && mateInfo[st.mate]) parts.push((st.mateMode === "con" ? "con " : "sin ") + mateInfo[st.mate].n);
+      return parts.join(" · ");
+    }
+    (function setupMinToggle() {
+      var c = $("[data-showmin]");
+      if (!c) return;
+      c.checked = st.showMin;
+      c.addEventListener("change", function () { st.showMin = c.checked; store("pl-showmin", st.showMin); renderCharts(); });
+    })();
+    (function setupRoleMate() {
+      var rb = $("[data-role-box]"), mb = $("[data-mate-box]");
+      if (!hasRole) { rb.innerHTML = '<span class="mono tb-lbl">Rol</span><span class="mono muted small">Sin datos de titular/suplente (ejecuta actualizar.bat)</span>'; }
+      else {
+        $$("[data-role]", rb).forEach(function (c) {
+          c.addEventListener("change", function () {
+            st[c.dataset.role] = c.checked;
+            if (!st.tit && !st.sup) { st.tit = st.sup = true; $$("[data-role]", rb).forEach(function (x) { x.checked = true; }); }
+            renderCharts(); renderLadder();
+          });
+        });
+      }
+      if (!hasMates) { mb.innerHTML = '<span class="mono tb-lbl">Compañero</span><span class="mono muted small">Sin datos de compañeros (ejecuta actualizar.bat)</span>'; return; }
+      var sel = $("[data-mate]", mb), tl = teamLastOf(P.t);
+      IDX.players.filter(function (p) { return p.t === P.t && String(p.id) !== String(P.id); })
+        .sort(function (a, b) { return (b.avg.min || 0) - (a.avg.min || 0); })
+        .forEach(function (p) {
+          var con = games.filter(function (g) { return (g.tm || []).indexOf(p.id) > -1; }).length;
+          var old = st.mate; st.mate = String(p.id); st.mateMode = "sin";
+          var sin = games.filter(mateOK).length; st.mate = old; st.mateMode = "sin";
+          var baja = tl && p.last < tl;
+          sel.insertAdjacentHTML("beforeend", '<option value="' + p.id + '">' + esc(p.n) + (baja ? " ⚠ posible baja" : "") + " · con " + con + " / sin " + sin + "</option>");
+        });
+      sel.addEventListener("change", function () { st.mate = sel.value; renderCharts(); renderLadder(); });
+      seg("[data-mate-mode]", "mateMode", function () { renderCharts(); renderLadder(); });
+    })();
     function getLine(kk, pool) {
       if (st.lines[kk] != null) return st.lines[kk];
       return lineDefault(avgOf(STAT[kk], pool.slice(-20)));
@@ -665,8 +755,15 @@
 
     /* --- gráfico de barras --- */
     function drawBars(host, s, shown, line, pool) {
-      var W = Math.max(320, Math.round(host.clientWidth || 960)), H = W < 640 ? 250 : 300, pl = 34, pr = 92, pt = 14, pb = 26;
-      var n = shown.length, iw = W - pl - pr, ih = H - pt - pb, bw = iw / Math.max(n, 1);
+      var showMin = st.showMin;
+      var W = Math.max(320, Math.round(host.clientWidth || 960)), pl = 34, pr = showMin ? 128 : 92, pt = 14;
+      var n = shown.length, iw = W - pl - pr, bw = iw / Math.max(n, 1);
+      var showLogos = bw >= 14, logoS = Math.min(24, Math.floor(bw * 0.78));
+      var showRole = bw >= 14 && shown.some(function (g) { return g.st === 0 || g.st === 1; });
+      var showVals = bw >= 20;
+      var pb = 24 + (showLogos ? logoS + 8 : 0) + (showRole ? 13 : 0);
+      var H = (W < 640 ? 250 : 300) + (pb - 26), ih = H - pt - pb;
+      var labX = W - pr + (showMin ? 36 : 6), labW = pr - (showMin ? 38 : 8);
       var xs = shown.map(function (g) { return val(s, g); });
       var real = xs.filter(function (x) { return x != null; });
       var mx = Math.max.apply(null, real.concat([line, 1])) * 1.08;
@@ -680,6 +777,7 @@
         out.push('<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + yy + '" y2="' + yy + '"/><text x="' + (pl - 6) + '" y="' + (yy + 4) + '" text-anchor="end">' + fmt(v, v % 1 ? 1 : 0) + "</text>");
       }
       out.push("</g>");
+      out.push('<text class="wm" x="' + (pl + iw / 2).toFixed(0) + '" y="' + (pt + Math.min(ih * 0.2, 60) + 20).toFixed(0) + '" text-anchor="middle" font-size="' + Math.max(26, Math.min(64, iw / 9)).toFixed(0) + '">NBA-LAB</text>');
       // separadores de temporada
       for (var i = 1; i < n; i++) {
         if (shown[i].s !== shown[i - 1].s) {
@@ -694,12 +792,34 @@
         if (x == null) { out.push('<rect class="bar p" data-i="' + i2 + '" x="' + bx.toFixed(1) + '" y="' + (pt + ih - 2) + '" width="' + w2.toFixed(1) + '" height="2"/>'); return; }
         var y0 = Y(Math.max(0, x)), hh = Math.max(2, pt + ih - y0);
         var c = x > line ? "o" : x < line ? "u" : "p";
-        out.push('<rect class="bar ' + c + '" data-i="' + i2 + '" x="' + bx.toFixed(1) + '" y="' + (pt + ih - hh).toFixed(1) + '" width="' + w2.toFixed(1) + '" height="' + hh.toFixed(1) + '" rx="' + Math.min(3, w2 / 3).toFixed(1) + '"/>');
+        out.push('<rect class="bar ' + c + '" data-i="' + i2 + '" x="' + bx.toFixed(1) + '" y="' + (pt + ih - hh).toFixed(1) + '" width="' + w2.toFixed(1) + '" height="' + hh.toFixed(1) + '" rx="' + Math.min(6, w2 / 4).toFixed(1) + '"/>');
+        if (showVals && hh >= 16) out.push('<text class="bar-v" x="' + (bx + w2 / 2).toFixed(1) + '" y="' + (pt + ih - 5).toFixed(1) + '" text-anchor="middle" font-size="' + Math.min(13, w2 * 0.45).toFixed(0) + '">' + fmt(x, s.pct || x % 1 ? 1 : 0) + "</text>");
       });
+      // fila inferior: rol (T/S) y escudo del rival
+      shown.forEach(function (g, i3) {
+        var cx = pl + (i3 + 0.5) * bw, yb = pt + ih + 4;
+        if (showRole) { out.push('<text class="role-l" x="' + cx.toFixed(1) + '" y="' + (yb + 9) + '" text-anchor="middle">' + (g.st === 1 ? "T" : g.st === 0 ? "S" : "") + "</text>"); yb += 13; }
+        if (showLogos) {
+          var u = logoUrl(g.o);
+          out.push('<text class="logo-t" x="' + cx.toFixed(1) + '" y="' + (yb + logoS / 2 + 3).toFixed(1) + '" text-anchor="middle" font-size="' + Math.max(7, Math.min(10, logoS * 0.4)).toFixed(0) + '">' + esc(g.o) + "</text>");
+          if (u) out.push('<image href="' + u + '" x="' + (cx - logoS / 2).toFixed(1) + '" y="' + yb.toFixed(1) + '" width="' + logoS + '" height="' + logoS + '" preserveAspectRatio="xMidYMid meet" onload="if(this.previousSibling)this.previousSibling.remove()" onerror="this.remove()"/>');
+        }
+      });
+      // línea de minutos (eje derecho)
+      if (showMin) {
+        var mMax = Math.max(48, Math.max.apply(null, shown.map(function (g) { return g.min || 0; })) + 2);
+        var YM = function (m) { return pt + ih - m / mMax * ih; };
+        out.push('<g class="min-axis">');
+        [0, 12, 24, 36, 48].forEach(function (m) { out.push('<text x="' + (W - pr + 6) + '" y="' + (YM(m) + 4).toFixed(1) + '">' + m + "'</text>"); });
+        out.push("</g>");
+        var dp = shown.map(function (g, i4) { return (i4 ? "L" : "M") + (pl + (i4 + 0.5) * bw).toFixed(1) + " " + YM(g.min || 0).toFixed(1); }).join("");
+        out.push('<path class="min-line" d="' + dp + '"/>');
+        if (bw >= 10) shown.forEach(function (g, i5) { out.push('<circle class="min-dot" cx="' + (pl + (i5 + 0.5) * bw).toFixed(1) + '" cy="' + YM(g.min || 0).toFixed(1) + '" r="' + (bw >= 24 ? 3 : 2) + '"/>'); });
+      }
       // eje x: fechas
       out.push('<g class="xl">');
-      var stepX = Math.max(1, Math.ceil(n / 8));
-      for (var j = 0; j < n; j += stepX) out.push('<text x="' + (pl + (j + 0.5) * bw).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle">' + fdate(shown[j].d) + "</text>");
+      var stepX = Math.max(1, Math.ceil(n / Math.max(1, Math.floor(iw / 52))));
+      for (var j = 0; j < n; j += stepX) out.push('<text x="' + (pl + (j + 0.5) * bw).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">' + fdate(shown[j].d) + "</text>");
       out.push("</g>");
       // líneas de media
       var a100 = avgOf(s, shown), a20 = avgOf(s, shown.slice(-20)), a10 = avgOf(s, shown.slice(-10));
@@ -719,7 +839,7 @@
       var over = labs.length ? labs[labs.length - 1].y - (pt + ih) : 0;
       if (over > 0) labs.forEach(function (l) { l.y -= over; });
       labs.forEach(function (l) {
-        out.push('<g class="lab"><rect x="' + (W - pr + 6) + '" y="' + (l.y - 9).toFixed(1) + '" width="' + (pr - 8) + '" height="18" fill="' + l.c + '"/><text x="' + (W - pr + 12) + '" y="' + (l.y + 4).toFixed(1) + '" fill="' + l.f + '">' + esc(l.t) + "</text></g>");
+        out.push('<g class="lab"><rect x="' + labX + '" y="' + (l.y - 9).toFixed(1) + '" width="' + labW + '" height="18" fill="' + l.c + '"/><text x="' + (labX + 6) + '" y="' + (l.y + 4).toFixed(1) + '" fill="' + l.f + '">' + esc(l.t) + "</text></g>");
       });
       out.push('<line class="cursor" x1="0" x2="0" y1="' + pt + '" y2="' + (pt + ih) + '" visibility="hidden"/>');
       out.push("</svg>");
@@ -761,7 +881,7 @@
     }
 
     function hitStrip(s, pool, line) {
-      var W2 = [["L5", pool.slice(-5)], ["L10", pool.slice(-10)], ["L20", pool.slice(-20)], ["L50", pool.slice(-50)], ["L100", pool.slice(-100)],
+      var W2 = [["L5", pool.slice(-5)], ["L10", pool.slice(-10)], ["L15", pool.slice(-15)], ["L20", pool.slice(-20)], ["L50", pool.slice(-50)], ["L100", pool.slice(-100)],
         ["TEMP", pool.filter(function (g) { return g.s === season && !g.po; })]];
       var h2h = nextOpp || lastG.o;
       if (st.opp === "all" && h2h) W2.push(["VS " + h2h + (nextOpp ? " ▸" : ""), games.filter(function (g) { return g.o === h2h; })]);
@@ -784,6 +904,8 @@
       var shown = pool.slice(-st.range);
       host.classList.toggle("multi", st.stats.length > 1);
       host.innerHTML = "";
+      var fn = $("[data-filter-note]");
+      if (fn) fn.textContent = filterLabel() ? "Filtro activo: " + filterLabel() + " · " + pool.length + " partidos" : "";
       if (!shown.length) { host.innerHTML = '<p class="empty">No hay partidos con estos filtros.</p>'; return; }
       var draws = [];
       st.stats.forEach(function (kk) {
@@ -792,20 +914,44 @@
         card.className = "card chart-card";
         var mx = vals(s, shown);
         card.innerHTML =
-          '<div class="chart-head"><h3>' + esc(s.l) + "<small>" + shown.length + " partidos" + (st.opp !== "all" ? " vs " + esc(st.opp) : "") + (st.loc !== "all" ? (st.loc === "1" ? " · local" : " · visitante") : "") + "</small></h3>" +
+          '<div class="chart-head"><h3>' + esc(s.l) + "<small>" + shown.length + " partidos" + (st.opp !== "all" ? " vs " + esc(st.opp) : "") + (st.loc !== "all" ? (st.loc === "1" ? " · local" : " · visitante") : "") + (filterLabel() ? " · " + esc(filterLabel()) : "") + "</small></h3>" +
           '<div style="display:flex;gap:8px;align-items:center"><div class="line-input"><button type="button" data-d="-1" aria-label="Bajar">−</button><input type="number" step="0.5" value="' + line + '" aria-label="Línea de apuesta"/><button type="button" data-d="1" aria-label="Subir">+</button></div>' +
           '<button class="x" title="Quitar gráfico" aria-label="Quitar gráfico">×</button></div></div>' +
+          '<div class="odds-row"><span class="mono tb-lbl">Cuotas de tu casa</span>' +
+          '<label class="odd"><span>Over</span><input type="text" inputmode="decimal" placeholder="1,85" data-odd="o" value="' + esc(st.odds[kk + "o"] || "") + '"/></label>' +
+          '<label class="odd"><span>Under</span><input type="text" inputmode="decimal" placeholder="1,95" data-odd="u" value="' + esc(st.odds[kk + "u"] || "") + '"/></label>' +
+          '<div class="value-out"></div></div>' +
           '<div class="hit-strip"></div><div class="plot"></div>' +
           '<div class="legend"><span><i class="sq" style="background:var(--over)"></i>Over</span><span><i class="sq" style="background:var(--under)"></i>Under</span>' +
           '<span><i style="border-color:var(--bet)"></i>Línea</span><span><i style="border-color:#fff;border-top-style:dashed"></i>Media ' + shown.length + '</span><span><i style="border-color:#6aa3ff;border-top-style:dotted"></i>Media 20</span><span><i style="border-color:#c08bff;border-top-style:dotted"></i>Media 10</span>' +
+          (st.showMin ? '<span><i style="border-color:#4cc9ff"></i>Minutos (eje derecho)</span>' : "") +
           (mx.length ? "<span>Máx " + fmt(Math.max.apply(null, mx), s.pct ? 1 : 0) + " · Mín " + fmt(Math.min.apply(null, mx), s.pct ? 1 : 0) + "</span>" : "") + "</div>";
         host.appendChild(card);
-        var inp = $("input", card);
+        var inp = $(".line-input input", card);
+        function valueOut() {
+          var L = parseFloat(String(inp.value).replace(",", ".")) || 0;
+          var xs = vals(s, shown), n = xs.length;
+          var o = xs.filter(function (x) { return x > L; }).length, u = xs.filter(function (x) { return x < L; }).length;
+          var out = [];
+          [["o", "Over", o], ["u", "Under", u]].forEach(function (k2) {
+            var odd = parseFloat(String(st.odds[kk + k2[0]] || "").replace(",", "."));
+            if (!odd || odd <= 1 || !n) return;
+            var pr = k2[2] / n, imp = 1 / odd, ev = pr * odd - 1;
+            var cls = ev > 0.05 ? "val-yes" : ev < -0.05 ? "val-no" : "val-eq";
+            var verdict = ev > 0.05 ? "✅ VALOR" : ev < -0.05 ? "❌ sin valor" : "≈ justa";
+            out.push('<span class="val ' + cls + '"><b>' + k2[1] + " " + fmt(L) + " @ " + fmt(odd, 2) + "</b> · implícita " + Math.round(imp * 100) + "% · real " + Math.round(pr * 100) + "% (" + k2[2] + "/" + n + ") · EV " + (ev > 0 ? "+" : "") + Math.round(ev * 100) + "% · " + verdict + "</span>");
+          });
+          $(".value-out", card).innerHTML = out.length ? out.join("") : '<span class="mono muted small">Escribe la cuota y te digo si hay valor según los ' + n + " partidos mostrados.</span>";
+        }
+        $$("[data-odd]", card).forEach(function (oi) {
+          oi.addEventListener("input", function () { st.odds[kk + oi.dataset.odd] = oi.value; valueOut(); });
+        });
         function apply(v) {
           v = Math.max(0, Math.round(v * 2) / 2);
           inp.value = v; st.lines[kk] = v; store(LS_KEY, st.lines);
           drawBars($(".plot", card), s, shown, v, pool);
           $(".hit-strip", card).innerHTML = hitStrip(s, pool, v);
+          valueOut();
         }
         inp.addEventListener("change", function () { apply(parseFloat(String(inp.value).replace(",", ".")) || 0); });
         $$("[data-d]", card).forEach(function (b) { b.addEventListener("click", function () { apply((parseFloat(inp.value) || 0) + (+b.dataset.d)); }); });
@@ -814,6 +960,7 @@
           if (i > -1 && st.stats.length > 1) { st.stats.splice(i, 1); store("pl-stats", st.stats); syncChips(); renderCharts(); }
         });
         $(".hit-strip", card).innerHTML = hitStrip(s, pool, line);
+        valueOut();
         draws.push(function () { drawBars($(".plot", card), s, shown, line, pool); });
       });
       draws.forEach(function (d) { safe(d, "drawBars"); });
@@ -825,11 +972,12 @@
     }
     function renderLadder() {
       var s = STAT[st.ladder];
+      var games = filtered(), last100 = games.slice(-100), seasonG = games.filter(function (g) { return g.s === season && !g.po; });
       var base = lineDefault(avgOf(s, games.slice(-20)));
       var step = (s.pct || st.ladder === "min" || ["ortg", "drtg", "pace", "usg", "ts", "efg"].indexOf(st.ladder) > -1) ? 2 : (["pts", "pra", "pr", "pa"].indexOf(st.ladder) > -1 ? 1 : 1);
       var lines = [];
       for (var i = -5; i <= 5; i++) { var L = base + i * step; if (L > 0) lines.push(L); }
-      var W3 = [["L5", games.slice(-5)], ["L10", games.slice(-10)], ["L20", games.slice(-20)], ["L50", games.slice(-50)], ["L100", last100], ["Temp", seasonG], ["Local L100", last100.filter(function (g) { return g.h; })], ["Visit. L100", last100.filter(function (g) { return !g.h; })]];
+      var W3 = [["L5", games.slice(-5)], ["L10", games.slice(-10)], ["L15", games.slice(-15)], ["L20", games.slice(-20)], ["L50", games.slice(-50)], ["L100", last100], ["Temp", seasonG], ["Local L100", last100.filter(function (g) { return g.h; })], ["Visit. L100", last100.filter(function (g) { return !g.h; })]];
       var h = "<thead><tr><th>Línea (over)</th>" + W3.map(function (w) { return "<th>" + w[0] + "</th>"; }).join("") + "</tr></thead><tbody>";
       lines.forEach(function (L) {
         h += '<tr><td class="line">+' + fmt(L) + "</td>" + W3.map(function (w) { return "<td>" + pctCell(hitOf(s, w[1], L)) + "</td>"; }).join("") + "</tr>";
@@ -881,12 +1029,64 @@
     function renderSplits() {
       var pool = st.sample === "season" ? seasonG : st.sample === "l100" ? last100 : games;
       var H1 = pool.filter(function (g) { return g.h; }), A1 = pool.filter(function (g) { return !g.h; });
-      var h = "<thead><tr><th>Estadística</th><th>Local (" + H1.length + ")</th><th>Visitante (" + A1.length + ")</th><th>Diferencia</th><th>Total (" + pool.length + ")</th></tr></thead><tbody>";
+      var T1 = pool.filter(function (g) { return g.st === 1; }), S1 = pool.filter(function (g) { return g.st === 0; });
+      function dcell(d) { return '<td class="' + (d == null || Math.abs(d) < 0.05 ? "muted" : d > 0 ? "trend-up" : "trend-down") + '">' + (d == null ? "—" : (d > 0 ? "+" : "") + fmt(d)) + "</td>"; }
+      var h = "<thead><tr><th>Estadística</th><th>Local (" + H1.length + ")</th><th>Visitante (" + A1.length + ")</th><th>Dif.</th>" +
+        (hasRole ? "<th>Titular (" + T1.length + ")</th><th>Suplente (" + S1.length + ")</th><th>Dif.</th>" : "") + "<th>Total (" + pool.length + ")</th></tr></thead><tbody>";
       MAIN.forEach(function (kk) {
         var s = STAT[kk], a = avgOf(s, H1), b = avgOf(s, A1), d = a != null && b != null ? a - b : null;
-        h += '<tr><td class="lbl">' + esc(s.l) + "<small>" + esc(s.s) + "</small></td><td>" + fmt(a) + "</td><td>" + fmt(b) + "</td><td class=\"" + (d == null || Math.abs(d) < 0.05 ? "muted" : d > 0 ? "trend-up" : "trend-down") + '">' + (d == null ? "—" : (d > 0 ? "+" : "") + fmt(d)) + "</td><td class=\"muted\">" + fmt(avgOf(s, pool)) + "</td></tr>";
+        var t = avgOf(s, T1), u = avgOf(s, S1), d2 = t != null && u != null ? t - u : null;
+        h += '<tr><td class="lbl">' + esc(s.l) + "<small>" + esc(s.s) + "</small></td><td>" + fmt(a) + "</td><td>" + fmt(b) + "</td>" + dcell(d) +
+          (hasRole ? "<td>" + fmt(t) + "</td><td>" + fmt(u) + "</td>" + dcell(d2) : "") + '<td class="muted">' + fmt(avgOf(s, pool)) + "</td></tr>";
       });
       $("[data-splits]").innerHTML = h + "</tbody>";
+    }
+
+    /* --- minutos y rotación --- */
+    function renderMinutes() {
+      var reg = games.filter(function (g) { return !g.po; });
+      var mS = avgOf(STAT.min, seasonG), m5 = avgOf(STAT.min, reg.slice(-5)), m10 = avgOf(STAT.min, reg.slice(-10)), m20 = avgOf(STAT.min, reg.slice(-20));
+      var known = seasonG.filter(function (g) { return g.st === 0 || g.st === 1; });
+      var gs = known.filter(function (g) { return g.st === 1; }).length;
+      var last5 = reg.slice(-5).map(function (g) { return g.st === 1 ? "T" : g.st === 0 ? "S" : "·"; }).join(" ");
+      var d = (m5 != null && mS != null) ? m5 - mS : null;
+      $("[data-min-tiles]").innerHTML =
+        '<div class="tile"><b>' + fmt(mS) + "</b><span>MIN · TEMP</span></div>" +
+        '<div class="tile"><b>' + fmt(m5) + "</b><span>MIN · L5</span></div>" +
+        '<div class="tile"><b>' + fmt(m10) + "</b><span>MIN · L10</span></div>" +
+        '<div class="tile"><b>' + fmt(m20) + "</b><span>MIN · L20</span></div>" +
+        '<div class="tile"><b class="' + (d == null || Math.abs(d) < 1 ? "" : d > 0 ? "trend-up" : "trend-down") + '">' + (d == null ? "—" : (d > 0 ? "+" : "") + fmt(d)) + "</b><span>L5 VS TEMP</span></div>" +
+        (hasRole ? '<div class="tile"><b>' + gs + "/" + known.length + "</b><span>TITULAR · TEMP</span></div>" +
+          '<div class="tile"><b class="mono" style="font-size:20px">' + esc(last5) + "</b><span>ROL ÚLT. 5</span></div>" : "");
+      var al = $("[data-rot-alert]");
+      if (d != null && Math.abs(d) >= 4) {
+        al.hidden = false;
+        al.className = "rot-alert " + (d > 0 ? "up" : "down");
+        al.innerHTML = (d > 0 ? "▲ <b>Más minutos:</b> " : "▼ <b>Menos minutos:</b> ") + fmt(m5) + " min en los últimos 5 frente a " + fmt(mS) + " de media esta temporada (" + (d > 0 ? "+" : "") + fmt(d) + "). Posible cambio de rotación: revisa sus líneas.";
+      } else al.hidden = true;
+      // gráfico: últimos 30 partidos
+      var pool = reg.slice(-30), host = $("[data-min-chart]");
+      if (!pool.length) { host.innerHTML = '<p class="empty">Sin partidos.</p>'; return; }
+      var W = Math.max(320, Math.round(host.clientWidth || 960)), H = 220, pl = 34, pr = 16, pt = 14, pb = 26, n = pool.length;
+      var bw = (W - pl - pr) / n, mx = Math.max(48, Math.max.apply(null, pool.map(function (g) { return g.min; })) + 2);
+      var Y = function (v) { return pt + (H - pt - pb) - v / mx * (H - pt - pb); };
+      var o = ['<svg class="chart-svg" viewBox="0 0 ' + W + " " + H + '"><g class="grid">'];
+      [0, 12, 24, 36, 48].forEach(function (v) { o.push('<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/><text x="' + (pl - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + v + "</text>"); });
+      o.push("</g>");
+      pool.forEach(function (g, i) {
+        var x = pl + i * bw + bw * 0.15, w = bw * 0.7, y = Y(g.min);
+        var c = g.st === 1 ? "var(--over)" : g.st === 0 ? "#6aa3ff" : "var(--dim)";
+        o.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + (pt + (H - pt - pb) - y).toFixed(1) + '" rx="2" fill="' + c + '" opacity=".85"><title>' + esc(fdate(g.d, true) + " " + (g.h ? "vs " : "@ ") + g.o + " · " + fmt(g.min) + " min" + (g.st === 1 ? " · titular" : g.st === 0 ? " · suplente" : "")) + "</title></rect>");
+      });
+      var roll = pool.map(function (g, i) { var w2 = pool.slice(Math.max(0, i - 4), i + 1); return w2.reduce(function (a, b) { return a + b.min; }, 0) / w2.length; });
+      o.push('<path d="' + roll.map(function (v, i) { return (i ? "L" : "M") + (pl + (i + 0.5) * bw).toFixed(1) + " " + Y(v).toFixed(1); }).join("") + '" stroke="var(--bet)" stroke-width="2.5" fill="none"/>');
+      if (mS != null) o.push('<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(mS) + '" y2="' + Y(mS) + '" stroke="#fff" stroke-dasharray="6 5" opacity=".7"/>');
+      o.push('<g class="xl">');
+      for (var j = 0; j < n; j += Math.max(1, Math.ceil(n / 8))) o.push('<text x="' + (pl + (j + 0.5) * bw).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle">' + fdate(pool[j].d) + "</text>");
+      o.push("</g></svg>");
+      host.innerHTML = o.join("") + '<div class="legend"><span><i class="sq" style="background:var(--over)"></i>Titular</span><span><i class="sq" style="background:#6aa3ff"></i>Suplente</span>' +
+        (hasRole ? "" : '<span><i class="sq" style="background:var(--dim)"></i>Sin dato</span>') +
+        '<span><i style="border-color:var(--bet)"></i>Media móvil 5</span><span><i style="border-color:#fff;border-top-style:dashed"></i>Media temporada</span><span>Últimos ' + n + " partidos</span></div>";
     }
 
     /* --- rivales --- */
@@ -931,13 +1131,14 @@
     safe(renderLadder, "ladder");
     safe(renderEvo, "evo");
     safe(renderSplits, "splits");
+    safe(renderMinutes, "minutes");
     safe(renderRivals, "rivals");
     safe(renderLog, "log");
     var rz = 0, lastW = window.innerWidth;
     window.addEventListener("resize", function () {
       tipHide();
       clearTimeout(rz);
-      rz = setTimeout(function () { if (Math.abs(window.innerWidth - lastW) > 30) { lastW = window.innerWidth; safe(renderCharts, "charts"); safe(renderEvo, "evo"); } }, 200);
+      rz = setTimeout(function () { if (Math.abs(window.innerWidth - lastW) > 30) { lastW = window.innerWidth; safe(renderCharts, "charts"); safe(renderEvo, "evo"); safe(renderMinutes, "minutes"); } }, 200);
     });
   }
 

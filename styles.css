@@ -404,3 +404,53 @@ select.input { cursor: pointer; }
   .roster-head span:nth-child(2), .roster-row > span:nth-child(2), .roster-head span:nth-child(7), .roster-row > span:nth-child(7) { display: none; }
   .nx-btn { margin-left: 0; }
 }
+
+/* ---------- filtros extra: rol y compañero ---------- */
+.toolbar-2 { gap: 18px; margin-top: -6px; }
+.tb-lbl { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .1em; }
+.role-box, .mate-box { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 6px 12px; }
+.mate-box select { max-width: 340px; }
+.filter-note { font-size: 12px; color: var(--bet); margin: -6px 0 12px; min-height: 1em; }
+.muted { color: var(--mute); }
+
+/* ---------- cuotas y valor ---------- */
+.odds-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; padding: 8px 10px; border-radius: 10px; background: var(--bg-3); }
+.odd { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--mute); }
+.odd input { width: 64px; font: inherit; font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; outline: none; }
+.odd input:focus { border-color: var(--bet); }
+.value-out { display: flex; flex-direction: column; gap: 4px; flex: 1 1 280px; }
+.val { font-size: 12px; font-family: var(--mono); padding: 5px 9px; border-radius: 8px; }
+.val b { font-weight: 700; }
+.val-yes { background: var(--over-dim); color: #9ff7cc; border: 1px solid rgba(25, 240, 139, .4); }
+.val-no { background: var(--under-dim); color: #ffb0be; border: 1px solid rgba(255, 71, 102, .35); }
+.val-eq { background: rgba(255, 210, 63, .08); color: var(--bet); border: 1px solid rgba(255, 210, 63, .3); }
+
+/* ---------- minutos ---------- */
+.rot-alert { padding: 12px 16px; border-radius: 12px; margin-bottom: 14px; font-size: 14px; }
+.rot-alert.up { background: var(--over-dim); border: 1px solid rgba(25, 240, 139, .4); color: #c9fbe2; }
+.rot-alert.down { background: var(--under-dim); border: 1px solid rgba(255, 71, 102, .4); color: #ffd6de; }
+
+/* ---------- panel del partido: buscador y posiciones ---------- */
+.gp-search { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 16px; }
+.gp-search input { flex: 1 1 280px; max-width: 460px; font-size: 15px; padding: 11px 14px; }
+.gp-legend { font-size: 11px; color: var(--dim); }
+.pos-group { margin-bottom: 14px; }
+.pos-title { font-size: 11px; color: var(--over); text-transform: uppercase; letter-spacing: .12em; margin: 4px 0 6px; }
+.role-tag { font-style: normal; font-size: 10px; color: var(--mute); border: 1px solid var(--line); border-radius: 5px; padding: 0 4px; margin-left: 4px; }
+.out-tag { font-style: normal; font-size: 10px; font-weight: 700; color: #2a2000; background: var(--bet); border-radius: 5px; padding: 1px 5px; }
+.roster-row.is-out { opacity: .6; }
+.roster-row i { font-style: normal; font-size: 10px; }
+@media (max-width: 560px) {
+  .role-box, .mate-box { width: 100%; }
+  .mate-box select { max-width: 100%; flex: 1; }
+}
+
+/* ---------- gráfico: marca de agua, valores, minutos, escudos ---------- */
+.chart-svg .wm { font-family: var(--sans); font-weight: 900; letter-spacing: -.02em; fill: #ffffff; opacity: .07; pointer-events: none; }
+.chart-svg .bar-v { font-family: var(--sans); font-weight: 800; fill: #04120b; pointer-events: none; }
+.chart-svg .bar.u + .bar-v { fill: #fff; }
+.chart-svg .min-line { fill: none; stroke: #4cc9ff; stroke-width: 2.5; stroke-linejoin: round; pointer-events: none; }
+.chart-svg .min-dot { fill: #4cc9ff; pointer-events: none; }
+.chart-svg .min-axis text { fill: #4cc9ff; font-family: var(--mono); font-size: 11px; }
+.chart-svg .role-l { fill: var(--mute); font-family: var(--mono); font-size: 10px; font-weight: 700; }
+.chart-svg .logo-t { fill: var(--dim); font-family: var(--mono); font-weight: 700; }
