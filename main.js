@@ -221,7 +221,18 @@
     var c = { pra: ["pts", "reb", "ast"], pr: ["pts", "reb"], pa: ["pts", "ast"], ra: ["reb", "ast"], sb: ["stl", "blk"] }[key];
     return c ? c.reduce(function (s, kk) { return s + (a[kk] || 0); }, 0) : 0;
   }
-  function pUrl(id) { return "jugador.html?id=" + encodeURIComponent(id); }
+  // Cada jugador tiene su propia página (jugador-santi-aldama.html) para que Google la indexe.
+  var SLUGS = null;
+  function slugOf(id) {
+    if (!SLUGS) { SLUGS = {}; IDX.players.forEach(function (p) { if (p.sl) SLUGS[p.id] = p.sl; }); }
+    return SLUGS[id];
+  }
+  function pUrl(id, vs) {
+    var sl = slugOf(id);
+    var u = sl ? "jugador-" + sl + ".html" : "jugador.html?id=" + encodeURIComponent(id);
+    if (vs) u += (u.indexOf("?") >= 0 ? "&" : "?") + "vs=" + encodeURIComponent(vs);
+    return u;
+  }
 
   function mountCounters() {
     var games = IDX.players.reduce(function (a, p) { return a + (p.tot || p.gp || 0); }, 0);
@@ -589,7 +600,7 @@
             var dm = (a.min5 != null && a.min != null) ? a.min5 - a.min : 0;
             var arrow = Math.abs(dm) >= 3 ? (dm > 0 ? ' <i class="trend-up" title="Minutos últimos 5: ' + fmt(a.min5) + '">▲</i>' : ' <i class="trend-down" title="Minutos últimos 5: ' + fmt(a.min5) + '">▼</i>') : "";
             var role = p.gsn ? '<em class="role-tag mono">' + (p.gs / p.gsn >= 0.5 ? "TIT" : "SUP") + " " + p.gs + "/" + p.gsn + "</em>" : "";
-            return '<a class="roster-row' + (baja ? " is-out" : "") + '" data-name="' + esc(normTxt(p.n)) + '" href="' + pUrl(p.id) + "&vs=" + encodeURIComponent(opp) + '">' +
+            return '<a class="roster-row' + (baja ? " is-out" : "") + '" data-name="' + esc(normTxt(p.n)) + '" href="' + pUrl(p.id, opp) + '">' +
               '<span class="player-cell">' + photoHTML(p) + "<span>" + esc(p.n) + "<small>" + esc(p.p || "—") + (p.j ? " · #" + esc(p.j) : "") + " " + role +
               (baja ? ' <em class="out-tag mono">POSIBLE BAJA</em>' : "") + "</small></span></span>" +
               "<span>" + fmt(a.min) + arrow + "</span><span><b>" + fmt(a.pts) + "</b></span><span>" + fmt(a.reb) + "</span><span>" + fmt(a.ast) + "</span><span>" + fmt(a.fg3m) + "</span><span>" + fmt(a.pts + a.reb + a.ast) + "</span></a>";
@@ -675,8 +686,13 @@
   }
 
   function bootPlayer() {
-    var id = new URLSearchParams(location.search).get("id");
+    var qs = new URLSearchParams(location.search);
+    var id = qs.get("id") || (window.__NBA_PID__ != null ? String(window.__NBA_PID__) : null);
     var info = IDX.players.filter(function (p) { return String(p.id) === String(id); })[0];
+    // Enlaces antiguos (jugador.html?id=...) → página propia del jugador
+    if (qs.get("id") && info && slugOf(info.id) && /jugador\.html$/.test(location.pathname)) {
+      location.replace(pUrl(info.id, qs.get("vs")) + location.hash); return;
+    }
     if (!id || !info) {
       if (!id && IDX.players.length) { location.replace(pUrl(IDX.players[0].id)); return; }
       $("[data-p-name]").textContent = "Jugador no encontrado";
@@ -684,7 +700,7 @@
       return;
     }
     $("[data-p-name]").textContent = info.n;
-    document.title = info.n + " — NBA LAB";
+    if (window.__NBA_PID__ == null) document.title = info.n + " — NBA LAB";
     loadScript("data/players/" + encodeURIComponent(id) + ".js?v=" + encodeURIComponent(IDX.updated || "1"))
       .then(function () {
         var P = (window.__NBA_PLAYERS__ || {})[id];
@@ -1366,7 +1382,7 @@
         var hh = hitOf(s, w[1], L);
         return '<div class="hit"><span>' + esc(w[0]) + "</span>" + (hh ? '<b style="color:' + (hh.p >= 50 ? "var(--over)" : "var(--under)") + '">' + Math.round(hh.p) + "%</b><em>" + hh.o + "/" + hh.n + "</em>" : "<b>—</b>") + "</div>";
       }).join("");
-      $("[data-m-full]").href = pUrl(P.id) + "&vs=" + encodeURIComponent(opp);
+      $("[data-m-full]").href = pUrl(P.id, opp);
       if (!shown.length) { $("[data-m-plot]").innerHTML = '<p class="empty">No hay partidos con estos filtros.</p>'; }
       else drawBars($("[data-m-plot]"), s, shown, L, pl, ms.showMin);
       renderValue();
