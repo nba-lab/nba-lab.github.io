@@ -726,7 +726,7 @@
     var LS_KEY = "pl-lines-" + P.id;
     var st = {
       stats: store("pl-stats") || ["pts", "reb", "ast"],
-      range: 100, loc: "all", opp: "all", po: true, tit: true, sup: true, mate: "", mateMode: "sin", odds: {}, showMin: store("pl-showmin") !== false,
+      range: (window.innerWidth < 600 ? 20 : 100), loc: "all", opp: "all", po: true, tit: true, sup: true, mate: "", mateMode: "sin", odds: {}, showMin: store("pl-showmin") !== false,
       lines: store(LS_KEY) || {}, sample: "l100", evo: "pts", evoW: 5, ladder: "pts"
     };
     st.stats = st.stats.filter(function (kk) { return STAT[kk]; });
@@ -813,6 +813,7 @@
       });
     }
     seg("[data-range]", "range", renderCharts);
+    $$("[data-range] button").forEach(function (x) { x.classList.toggle("on", +x.dataset.v === st.range); });
     seg("[data-loc]", "loc", renderCharts);
     seg("[data-sample]", "sample", renderSplits);
     seg("[data-evo-win]", "evoW", renderEvo);
@@ -1425,4 +1426,197 @@
     document.documentElement.classList.add("is-ready");
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
+})();
+
+/* =========================================================================
+   NBA LAB como app (PWA): instalar en el móvil, funcionar sin conexión
+   y barra de pestañas cuando se abre desde el icono.
+   ========================================================================= */
+(function () {
+  "use strict";
+  var d = document, html = d.documentElement, ua = navigator.userAgent || "";
+  var TG = (window.__BRAND__ && window.__BRAND__.telegram && window.__BRAND__.telegram.url) || "https://t.me/+vensGz7cBlY3MzQ8";
+  function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) { return null; } }
+
+  /* --- 1. Etiquetas de app (por si la página se generó antes de añadirlas) --- */
+  function tag(name, attrs) {
+    var el = d.createElement(name);
+    Object.keys(attrs).forEach(function (k) { el.setAttribute(k, attrs[k]); });
+    d.head.appendChild(el);
+  }
+  if (!d.querySelector('link[rel="manifest"]')) {
+    tag("link", { rel: "manifest", href: "/manifest.webmanifest" });
+    tag("meta", { name: "theme-color", content: "#08090b" });
+    tag("link", { rel: "apple-touch-icon", href: "/assets/img/apple-touch-icon.png" });
+    tag("meta", { name: "apple-mobile-web-app-capable", content: "yes" });
+    tag("meta", { name: "apple-mobile-web-app-title", content: "NBA LAB" });
+    tag("meta", { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" });
+    var vp = d.querySelector('meta[name="viewport"]');
+    if (vp && vp.content.indexOf("viewport-fit") < 0) vp.content += ", viewport-fit=cover";
+  }
+
+  var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var isAndroid = /Android/i.test(ua);
+  var isMobile = isIOS || isAndroid;
+  var inApp = (isAndroid && /; wv\)/.test(ua)) || (isIOS && !/Safari\//.test(ua)) || /Instagram|FBAN|FBAV|Telegram|Twitter/i.test(ua);
+  var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  if (standalone) html.classList.add("is-app");
+
+  /* --- 2. Service worker --- */
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); });
+  }
+
+  /* --- 3. En la app: si vuelves tras un rato, recarga para ver los datos nuevos --- */
+  var hiddenAt = 0;
+  d.addEventListener("visibilitychange", function () {
+    if (d.hidden) { hiddenAt = Date.now(); return; }
+    if (standalone && hiddenAt && Date.now() - hiddenAt > 20 * 60 * 1000) location.reload();
+  });
+
+  var IC = {
+    home: '<path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+    cal: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    users: '<circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 5.2a3.5 3.5 0 0 1 0 6.6M18 14.8c2 .7 3.2 2.4 3.5 5.2"/>',
+    scan: '<path d="M5 20V12M10 20V6M15 20v-9M20 20v-5M3 9.5h18" />',
+    tg: '<path d="M21.5 3.5 2.8 10.7c-.9.4-.9 1.6.1 1.9l4.6 1.5 1.8 5.6c.3.8 1.3 1 1.9.4l2.6-2.5 4.9 3.6c.7.5 1.7.1 1.9-.7L23 4.9c.2-1-.7-1.8-1.5-1.4Z" fill="currentColor" stroke="none"/>',
+    dl: '<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/>',
+    share: '<path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/>',
+    plus: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/>'
+  };
+  function svg(k) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC[k] + "</svg>"; }
+
+  /* --- 4. Barra de pestañas (solo dentro de la app) --- */
+  function tabbar() {
+    var page = d.body.getAttribute("data-page");
+    var pre = page === "home" ? "" : "index.html";
+    var items = [
+      ["home", "Inicio", pre + "#top", "top"],
+      ["cal", "Partidos", pre + "#calendario", "calendario"],
+      ["users", "Jugadores", pre + "#jugadores", "jugadores"],
+      ["scan", "Escáner", pre + "#escaner", "escaner"],
+      ["tg", "Telegram", TG, "tg"]
+    ];
+    var nav = d.createElement("nav");
+    nav.className = "app-tabs";
+    nav.setAttribute("aria-label", "Secciones");
+    nav.innerHTML = items.map(function (it) {
+      var ext = it[3] === "tg";
+      return '<a href="' + it[2] + '" data-tab="' + it[3] + '"' + (ext ? ' target="_blank" rel="noopener" class="is-tg"' : "") + ">" + svg(it[0]) + "<span>" + it[1] + "</span></a>";
+    }).join("");
+    d.body.appendChild(nav);
+    nav.addEventListener("click", function (e) {
+      var a = e.target.closest("a");
+      if (a && a.dataset.tab === "top" && page === "home") { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+    });
+    function mark() {
+      var cur = page === "player" ? "jugadores" : page === "match" ? "calendario" : "top";
+      if (page === "home") {
+        ["calendario", "jugadores", "escaner"].forEach(function (id) {
+          var s = d.getElementById(id);
+          if (s && s.getBoundingClientRect().top < window.innerHeight * 0.45) cur = id;
+        });
+      }
+      Array.prototype.forEach.call(nav.querySelectorAll("a"), function (a) { a.classList.toggle("on", a.dataset.tab === cur); });
+    }
+    window.addEventListener("scroll", mark, { passive: true });
+    mark();
+  }
+
+  /* --- 5. Instalar la app --- */
+  var deferred = null;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferred = e;
+    html.classList.add("can-install");
+    maybeBanner(800);
+  });
+  window.addEventListener("appinstalled", function () {
+    deferred = null;
+    ls("nbalab-installed", "1");
+    closeBanner();
+    html.classList.remove("can-install");
+  });
+
+  function sheet(kind) {
+    var old = d.querySelector(".app-sheet");
+    if (old) old.remove();
+    var steps;
+    if (kind === "inapp") {
+      steps = "<li>Pulsa el menú <b>⋮</b> o <b>···</b> de arriba.</li><li>Elige <b>Abrir en el navegador</b> (Chrome o Safari).</li><li>Allí pulsa <b>Instalar app</b>.</li>";
+    } else if (kind === "ios") {
+      steps = "<li>Pulsa el botón <b>Compartir</b> " + svg("share") + " de la barra de Safari.</li><li>Baja y elige <b>Añadir a pantalla de inicio</b> " + svg("plus") + ".</li><li>Pulsa <b>Añadir</b>. El icono de NBA LAB aparecerá con tus apps.</li>";
+    } else {
+      steps = "<li>Abre el menú del navegador <b>⋮</b>.</li><li>Pulsa <b>Instalar app</b> o <b>Añadir a pantalla de inicio</b>.</li><li>Confirma. El icono de NBA LAB aparecerá con tus apps.</li>";
+    }
+    var el = d.createElement("div");
+    el.className = "app-sheet" + (kind === "ios" ? " is-ios" : "");
+    el.innerHTML = '<div class="app-sheet-card" role="dialog" aria-modal="true" aria-label="Instalar la app">' +
+      '<button class="app-x" type="button" aria-label="Cerrar">×</button>' +
+      '<div class="app-sheet-head"><img src="/assets/img/icon-192.png" alt="" /><div><b>Instala NBA LAB</b><span>Gratis · sin tiendas · siempre al día</span></div></div>' +
+      "<ol>" + steps + "</ol></div>";
+    d.body.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add("show"); });
+    el.addEventListener("click", function (e) { if (e.target === el || e.target.closest(".app-x")) el.remove(); });
+  }
+
+  function install() {
+    if (deferred) {
+      deferred.prompt();
+      deferred.userChoice.then(function (r) { if (r && r.outcome === "accepted") closeBanner(); deferred = null; });
+      return;
+    }
+    sheet(inApp ? "inapp" : isIOS ? "ios" : "other");
+  }
+  window.nbaInstall = install;
+
+  var banner = null;
+  function closeBanner(remember) {
+    if (remember) ls("nbalab-banner-off", String(Date.now()));
+    html.classList.remove("has-banner");
+    if (banner) { banner.classList.remove("show"); var b = banner; setTimeout(function () { b.remove(); }, 400); banner = null; }
+  }
+  function maybeBanner(delay) {
+    if (standalone || banner || !isMobile || ls("nbalab-installed")) return;
+    var off = +ls("nbalab-banner-off") || 0;
+    if (Date.now() - off < 5 * 24 * 3600 * 1000) return;
+    setTimeout(function () {
+      if (banner) return;
+      banner = d.createElement("div");
+      banner.className = "app-banner";
+      banner.innerHTML = '<img src="/assets/img/icon-192.png" alt="" /><div class="app-banner-txt"><b>Instala NBA LAB</b><span>Gratis · se abre a pantalla completa</span></div>' +
+        '<button type="button" class="app-banner-btn">Instalar</button><button type="button" class="app-x" aria-label="Cerrar">×</button>';
+      d.body.appendChild(banner);
+      banner.querySelector(".app-banner-btn").addEventListener("click", install);
+      banner.querySelector(".app-x").addEventListener("click", function () { closeBanner(true); });
+      html.classList.add("has-banner");
+      requestAnimationFrame(function () { banner && banner.classList.add("show"); });
+    }, delay);
+  }
+
+  function boot() {
+    if (standalone) { ls("nbalab-installed", "1"); tabbar(); return; }
+    // botón "App" en la cabecera y enlace en el pie
+    var navTg = d.querySelector(".nav .nav-tg");
+    if (navTg) {
+      var b = d.createElement("button");
+      b.type = "button"; b.className = "nav-app"; b.innerHTML = svg("dl") + "<span>App</span>";
+      b.setAttribute("aria-label", "Instalar la app");
+      b.addEventListener("click", install);
+      navTg.parentNode.insertBefore(b, navTg);
+    }
+    var foot = d.querySelector(".footer > div");
+    if (foot) {
+      foot.insertAdjacentHTML("beforeend", ' · <a href="#" class="foot-app">📲 Instalar la app</a>');
+      foot.querySelector(".foot-app").addEventListener("click", function (e) { e.preventDefault(); install(); });
+    }
+    // En iPhone y en navegadores sin aviso propio, mostramos el nuestro
+    if (isIOS || inApp) maybeBanner(4000);
+    else if (isAndroid) setTimeout(function () {
+      if (deferred) return;
+      var chk = navigator.getInstalledRelatedApps ? navigator.getInstalledRelatedApps() : Promise.resolve([]);
+      chk.then(function (apps) { if (apps && apps.length) ls("nbalab-installed", "1"); else maybeBanner(0); }, function () { maybeBanner(0); });
+    }, 6000);
+  }
+  if (d.readyState === "loading") d.addEventListener("DOMContentLoaded", boot); else boot();
 })();
