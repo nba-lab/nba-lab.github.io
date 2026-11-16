@@ -971,7 +971,7 @@
   /* C = { P, games, season, opp, nextG, filt, allOpp } (ficha de jugador o página de partido) */
   function shareImage(s, pool, line, C) {
     var P = C.P, games = C.games, season = C.season, nextOpp = C.opp, nextG = C.nextG;
-    var shown = pool.slice(-15), W = 1080, H = 1350;
+    var shown = pool.slice(-10), W = 1080, H = 1350;
     var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
     var x = cv.getContext("2d");
     var F = "Inter, system-ui, sans-serif", M = "'JetBrains Mono', Consolas, monospace";
@@ -1018,10 +1018,10 @@
         x.textAlign = "left";
       });
       // gráfico
-      var cx0 = 80, cy0 = 790, cw = W - 160, ch = 330, xs = shown.map(function (g) { return val(s, g); });
+      var cx0 = 80, cy0 = 790, cw = W - 160 - 96, ch = 330, xs = shown.map(function (g) { return val(s, g); });
       var real = xs.filter(function (v) { return v != null; }), mx = Math.max.apply(null, real.concat([line, 1])) * 1.15;
       x.font = "600 24px " + M; x.fillStyle = "#8b919c"; x.fillText("ÚLTIMOS " + shown.length + " PARTIDOS", cx0, 765);
-      x.textAlign = "right"; x.fillText("MEDIA " + fmt(avgOf(s, shown)), cx0 + cw, 765); x.textAlign = "left";
+      x.textAlign = "right"; x.fillText("MEDIA " + fmt(avgOf(s, shown)), W - 80, 765); x.textAlign = "left";
       var bw = cw / Math.max(1, shown.length), Y = function (v) { return cy0 + ch - v / mx * ch; };
       x.strokeStyle = "#23272f"; x.lineWidth = 1; x.beginPath(); x.moveTo(cx0, cy0 + ch); x.lineTo(cx0 + cw, cy0 + ch); x.stroke();
       shown.forEach(function (g, i) {
@@ -1035,7 +1035,7 @@
       });
       x.setLineDash([14, 10]); x.strokeStyle = "#ffd23f"; x.lineWidth = 4; x.beginPath(); x.moveTo(cx0, Y(line)); x.lineTo(cx0 + cw, Y(line)); x.stroke(); x.setLineDash([]);
       x.font = "800 24px " + M; var lt = fmt(line), lw = x.measureText(lt).width + 20;
-      rr(cx0 + cw - lw, Y(line) - 38, lw, 32, 8); x.fillStyle = "#ffd23f"; x.fill(); x.fillStyle = "#08090b"; x.fillText(lt, cx0 + cw - lw + 10, Y(line) - 13);
+      rr(cx0 + cw + 12, Y(line) - 16, lw, 32, 8); x.fillStyle = "#ffd23f"; x.fill(); x.fillStyle = "#08090b"; x.fillText(lt, cx0 + cw + 22, Y(line) + 9);
       // pie
       x.strokeStyle = "#23272f"; x.lineWidth = 2; x.beginPath(); x.moveTo(80, 1190); x.lineTo(W - 80, 1190); x.stroke();
       x.font = "500 24px " + F; x.fillStyle = "#8b919c"; x.fillText("Gráficos y estadísticas gratis, en español:", 80, 1232);
