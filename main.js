@@ -956,6 +956,141 @@
     });
   }
 
+  /* --- imagen para compartir (X, Telegram, WhatsApp) --- */
+  /* C = { P, games, season, opp, nextG, filt, allOpp } (ficha de jugador o página de partido) */
+  function shareImage(s, pool, line, C) {
+    var P = C.P, games = C.games, season = C.season, nextOpp = C.opp, nextG = C.nextG;
+    var shown = pool.slice(-15), W = 1080, H = 1350;
+    var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    var x = cv.getContext("2d");
+    var F = "Inter, system-ui, sans-serif", M = "'JetBrains Mono', Consolas, monospace";
+    var site = "nba-lab.github.io/" + (slugOf(P.id) ? "jugador-" + slugOf(P.id) + ".html" : "");
+    function rr(x0, y0, w, h, r) { x.beginPath(); x.moveTo(x0 + r, y0); x.arcTo(x0 + w, y0, x0 + w, y0 + h, r); x.arcTo(x0 + w, y0 + h, x0, y0 + h, r); x.arcTo(x0, y0 + h, x0, y0, r); x.arcTo(x0, y0, x0 + w, y0, r); x.closePath(); }
+    function glow(cx, cy, r, col) { var g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, W, H); }
+    function fitText(t, maxW, size, weight) { do { x.font = weight + " " + size + "px " + F; size -= 2; } while (x.measureText(t).width > maxW && size > 30); }
+    var hits = [["L5", pool.slice(-5)], ["L10", pool.slice(-10)], ["L20", pool.slice(-20)], ["TEMP", pool.filter(function (g) { return g.s === season && !g.po; })]];
+    var h2h = nextOpp || null;
+    if (h2h && C.allOpp) hits.push(["VS " + h2h, games.filter(function (g) { return g.o === h2h; })]);
+    function draw(photo) {
+      x.fillStyle = "#08090b"; x.fillRect(0, 0, W, H);
+      glow(160, 120, 620, "rgba(25,240,139,.22)"); glow(980, 420, 640, "rgba(43,107,255,.20)"); glow(300, 1250, 560, "rgba(138,60,255,.14)");
+      x.textBaseline = "alphabetic";
+      // cabecera
+      x.fillStyle = "#19f08b"; x.beginPath(); x.arc(92, 88, 11, 0, 7); x.fill();
+      x.font = "800 42px " + F; x.fillStyle = "#f4f5f7"; x.fillText("NBA", 116, 103);
+      var w1 = x.measureText("NBA ").width; x.fillStyle = "#19f08b"; x.fillText("LAB", 116 + w1, 103);
+      x.font = "500 26px " + M; x.fillStyle = "#8b919c"; x.textAlign = "right"; x.fillText("@nbavaluelab", W - 80, 100); x.textAlign = "left";
+      // jugador
+      var nameMax = W - 160 - (photo ? 300 : 0);
+      if (photo) { try { x.drawImage(photo, W - 80 - 290, 150, 290, 212); } catch (_) {} }
+      fitText(P.n, nameMax, 80, "900"); x.fillStyle = "#f4f5f7"; x.fillText(P.n, 80, 250);
+      var sub = [P.t, P.p].filter(Boolean).join(" · ");
+      if (nextOpp) {
+        var t = nextG ? madrid(nextG.utc) : null, home = nextG ? nextG.h.t === P.t : true;
+        sub += "  ·  " + (home ? "vs " : "@ ") + nextOpp + (t && t.d ? " · " + t.d + " " + t.h : "");
+      }
+      x.font = "500 30px " + F; x.fillStyle = "#c7cbd2"; x.fillText(sub, 80, 305);
+      var fl = C.filt || "";
+      if (fl) { x.font = "500 24px " + M; x.fillStyle = "#ffd23f"; x.fillText("Filtro: " + fl, 80, 345); }
+      // prop
+      rr(80, 380, W - 160, 150, 26); x.fillStyle = "rgba(16,18,22,.92)"; x.fill(); x.strokeStyle = "rgba(25,240,139,.45)"; x.lineWidth = 2; x.stroke();
+      x.font = "700 24px " + M; x.fillStyle = "#19f08b"; x.fillText("PROP", 116, 428);
+      fitText("Más de " + fmt(line) + " " + s.l.toLowerCase(), W - 232, 62, "800"); x.fillStyle = "#f4f5f7"; x.fillText("Más de " + fmt(line) + " " + s.l.toLowerCase(), 116, 497);
+      // aciertos
+      var n = hits.length, gap = 16, tw = (W - 160 - gap * (n - 1)) / n;
+      hits.forEach(function (hh, i) {
+        var r = hitOf(s, hh[1], line), x0 = 80 + i * (tw + gap);
+        rr(x0, 560, tw, 150, 20); x.fillStyle = "#171a20"; x.fill();
+        x.textAlign = "center"; x.font = "600 22px " + M; x.fillStyle = "#8b919c"; x.fillText(hh[0], x0 + tw / 2, 600);
+        x.font = "800 54px " + F; x.fillStyle = r ? (r.p >= 50 ? "#19f08b" : "#ff4766") : "#5b616b"; x.fillText(r ? Math.round(r.p) + "%" : "—", x0 + tw / 2, 662);
+        x.font = "500 24px " + M; x.fillStyle = "#8b919c"; x.fillText(r ? r.o + "/" + r.n : "", x0 + tw / 2, 694);
+        x.textAlign = "left";
+      });
+      // gráfico
+      var cx0 = 80, cy0 = 790, cw = W - 160, ch = 330, xs = shown.map(function (g) { return val(s, g); });
+      var real = xs.filter(function (v) { return v != null; }), mx = Math.max.apply(null, real.concat([line, 1])) * 1.15;
+      x.font = "600 24px " + M; x.fillStyle = "#8b919c"; x.fillText("ÚLTIMOS " + shown.length + " PARTIDOS", cx0, 765);
+      x.textAlign = "right"; x.fillText("MEDIA " + fmt(avgOf(s, shown)), cx0 + cw, 765); x.textAlign = "left";
+      var bw = cw / Math.max(1, shown.length), Y = function (v) { return cy0 + ch - v / mx * ch; };
+      x.strokeStyle = "#23272f"; x.lineWidth = 1; x.beginPath(); x.moveTo(cx0, cy0 + ch); x.lineTo(cx0 + cw, cy0 + ch); x.stroke();
+      shown.forEach(function (g, i) {
+        var v = xs[i]; if (v == null) return;
+        var bx = cx0 + i * bw + bw * 0.14, w = bw * 0.72, y = Y(v), over = v > line;
+        rr(bx, y, w, Math.max(4, cy0 + ch - y), Math.min(10, w / 3)); x.fillStyle = over ? "#19f08b" : v === line ? "#8b919c" : "#ff4766"; x.fill();
+        x.textAlign = "center";
+        x.font = "700 " + (bw > 60 ? 26 : 20) + "px " + M; x.fillStyle = "#f4f5f7"; x.fillText(fmt(v, s.pct ? 0 : (Number.isInteger(v) ? 0 : 1)), bx + w / 2, y - 10);
+        x.font = "500 " + (bw > 60 ? 20 : 16) + "px " + M; x.fillStyle = "#8b919c"; x.fillText(g.o || "", bx + w / 2, cy0 + ch + 30);
+        x.textAlign = "left";
+      });
+      x.setLineDash([14, 10]); x.strokeStyle = "#ffd23f"; x.lineWidth = 4; x.beginPath(); x.moveTo(cx0, Y(line)); x.lineTo(cx0 + cw, Y(line)); x.stroke(); x.setLineDash([]);
+      x.font = "800 24px " + M; var lt = fmt(line), lw = x.measureText(lt).width + 20;
+      rr(cx0 + cw - lw, Y(line) - 38, lw, 32, 8); x.fillStyle = "#ffd23f"; x.fill(); x.fillStyle = "#08090b"; x.fillText(lt, cx0 + cw - lw + 10, Y(line) - 13);
+      // pie
+      x.strokeStyle = "#23272f"; x.lineWidth = 2; x.beginPath(); x.moveTo(80, 1190); x.lineTo(W - 80, 1190); x.stroke();
+      x.font = "500 24px " + F; x.fillStyle = "#8b919c"; x.fillText("Gráficos y estadísticas gratis, en español:", 80, 1232);
+      fitText(site, W - 160, 34, "800"); x.fillStyle = "#19f08b"; x.fillText(site, 80, 1274);
+      x.font = "500 20px " + M; x.fillStyle = "#5b616b"; x.fillText("+18 · Juega con responsabilidad · jugarbien.es", 80, 1316);
+      x.textAlign = "right"; x.fillStyle = "#2aabee"; x.font = "700 20px " + M; x.fillText("Telegram: NBA LAB", W - 80, 1316); x.textAlign = "left";
+      openShare(cv, s, line, site, C, pool);
+    }
+    var url = BRAND.photoUrl ? BRAND.photoUrl(P.id) : "", done = false;
+    function go(img) { if (done) return; done = true; draw(img); }
+    var ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    ready.then(function () {
+      if (!url) return go(null);
+      var img = new Image(); img.crossOrigin = "anonymous";
+      img.onload = function () { go(img); }; img.onerror = function () { go(null); };
+      setTimeout(function () { go(null); }, 2500);
+      img.src = url + (url.indexOf("?") > -1 ? "&" : "?") + "cors=1";
+    });
+  }
+  function openShare(cv, s, line, site, C, pool) {
+    var P = C.P, nextOpp = C.opp;
+    var old = $(".share-modal"); if (old) old.remove();
+    var hit10 = hitOf(s, pool.slice(-10), line);
+    var text = P.n + " · Más de " + fmt(line) + " " + s.l.toLowerCase() + (hit10 ? " · L10 " + hit10.o + "/" + hit10.n : "") + (nextOpp ? " · vs " + nextOpp : "") + "\n📊 " + "https://" + site + "\n#NBA #props";
+    var fname = "nbalab-" + (slugOf(P.id) || P.id) + "-" + s.k + "-" + String(line).replace(".", "_") + ".png";
+    var m = document.createElement("div");
+    m.className = "share-modal";
+    m.innerHTML = '<div class="share-card" role="dialog" aria-label="Imagen para compartir"><button class="share-x" type="button" aria-label="Cerrar">×</button>' +
+      '<img alt="Imagen para compartir" src="' + cv.toDataURL("image/png") + '">' +
+      '<div class="share-actions"><button type="button" class="btn btn-primary" data-sh="share" hidden>Compartir</button>' +
+      '<button type="button" class="btn btn-ghost" data-sh="dl">Descargar imagen</button>' +
+      '<button type="button" class="btn btn-ghost" data-sh="copy" hidden>Copiar imagen</button>' +
+      '<button type="button" class="btn btn-ghost" data-sh="txt">Copiar texto para X</button></div>' +
+      '<p class="mono small share-msg" data-sh-msg></p></div>';
+    document.body.appendChild(m);
+    var msg = $("[data-sh-msg]", m);
+    function close() { m.remove(); }
+    $(".share-x", m).addEventListener("click", close);
+    m.addEventListener("click", function (e) { if (e.target === m) close(); });
+    cv.toBlob(function (blob) {
+      if (!blob) return;
+      var file = null;
+      try { file = new File([blob], fname, { type: "image/png" }); } catch (_) {}
+      var bs = $('[data-sh="share"]', m), bc = $('[data-sh="copy"]', m);
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        bs.hidden = false;
+        bs.addEventListener("click", function () { navigator.share({ files: [file], text: text }).catch(function () {}); });
+      }
+      if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+        bc.hidden = false;
+        bc.addEventListener("click", function () {
+          navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(function () { msg.textContent = "Imagen copiada: pégala en X o Telegram."; }, function () { msg.textContent = "Tu navegador no deja copiar imágenes: usa Descargar."; });
+        });
+      }
+      $('[data-sh="dl"]', m).addEventListener("click", function () {
+        var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = fname;
+        document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      });
+    }, "image/png");
+    $('[data-sh="txt"]', m).addEventListener("click", function () {
+      var ok = function () { msg.textContent = "Texto copiado."; };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, function () { msg.textContent = text; });
+      else msg.textContent = text;
+    });
+  }
+
   function bootPlayer() {
     var qs = new URLSearchParams(location.search);
     var id = qs.get("id") || (window.__NBA_PID__ != null ? String(window.__NBA_PID__) : null);
@@ -1260,7 +1395,9 @@
         }
         inp.addEventListener("change", function () { apply(parseFloat(String(inp.value).replace(",", ".")) || 0); });
         $$("[data-d]", card).forEach(function (b) { b.addEventListener("click", function () { apply((parseFloat(inp.value) || 0) + (+b.dataset.d)); }); });
-        $(".share-btn", card).addEventListener("click", function () { safe(function () { shareImage(s, pool, parseFloat(String(inp.value).replace(",", ".")) || 0); }, "share"); });
+        $(".share-btn", card).addEventListener("click", function () { safe(function () { shareImage(s, pool, parseFloat(String(inp.value).replace(",", ".")) || 0, {
+          P: P, games: games, season: season, opp: nextOpp, nextG: nextG, allOpp: st.opp === "all",
+          filt: [filterLabel(), st.opp !== "all" ? "vs " + st.opp : "", st.loc === "1" ? "solo local" : st.loc === "0" ? "solo visitante" : ""].filter(Boolean).join(" · ") }); }, "share"); });
         $(".x", card).addEventListener("click", function () {
           var i = st.stats.indexOf(kk);
           if (i > -1 && st.stats.length > 1) { st.stats.splice(i, 1); store("pl-stats", st.stats); syncChips(); renderCharts(); }
@@ -1523,137 +1660,6 @@
       });
     }
 
-    /* --- imagen para compartir (X, Telegram, WhatsApp) --- */
-    function shareImage(s, pool, line) {
-      var shown = pool.slice(-15), W = 1080, H = 1350;
-      var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
-      var x = cv.getContext("2d");
-      var F = "Inter, system-ui, sans-serif", M = "'JetBrains Mono', Consolas, monospace";
-      var site = "nba-lab.github.io/" + (slugOf(P.id) ? "jugador-" + slugOf(P.id) + ".html" : "");
-      function rr(x0, y0, w, h, r) { x.beginPath(); x.moveTo(x0 + r, y0); x.arcTo(x0 + w, y0, x0 + w, y0 + h, r); x.arcTo(x0 + w, y0 + h, x0, y0 + h, r); x.arcTo(x0, y0 + h, x0, y0, r); x.arcTo(x0, y0, x0 + w, y0, r); x.closePath(); }
-      function glow(cx, cy, r, col) { var g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, W, H); }
-      function fitText(t, maxW, size, weight) { do { x.font = weight + " " + size + "px " + F; size -= 2; } while (x.measureText(t).width > maxW && size > 30); }
-      var hits = [["L5", pool.slice(-5)], ["L10", pool.slice(-10)], ["L20", pool.slice(-20)], ["TEMP", pool.filter(function (g) { return g.s === season && !g.po; })]];
-      var h2h = nextOpp || null;
-      if (h2h && st.opp === "all") hits.push(["VS " + h2h, games.filter(function (g) { return g.o === h2h; })]);
-      function draw(photo) {
-        x.fillStyle = "#08090b"; x.fillRect(0, 0, W, H);
-        glow(160, 120, 620, "rgba(25,240,139,.22)"); glow(980, 420, 640, "rgba(43,107,255,.20)"); glow(300, 1250, 560, "rgba(138,60,255,.14)");
-        x.textBaseline = "alphabetic";
-        // cabecera
-        x.fillStyle = "#19f08b"; x.beginPath(); x.arc(92, 88, 11, 0, 7); x.fill();
-        x.font = "800 42px " + F; x.fillStyle = "#f4f5f7"; x.fillText("NBA", 116, 103);
-        var w1 = x.measureText("NBA ").width; x.fillStyle = "#19f08b"; x.fillText("LAB", 116 + w1, 103);
-        x.font = "500 26px " + M; x.fillStyle = "#8b919c"; x.textAlign = "right"; x.fillText("@nbavaluelab", W - 80, 100); x.textAlign = "left";
-        // jugador
-        var nameMax = W - 160 - (photo ? 300 : 0);
-        if (photo) { try { x.drawImage(photo, W - 80 - 290, 150, 290, 212); } catch (_) {} }
-        fitText(P.n, nameMax, 80, "900"); x.fillStyle = "#f4f5f7"; x.fillText(P.n, 80, 250);
-        var sub = [P.t, P.p].filter(Boolean).join(" · ");
-        if (nextOpp) {
-          var t = nextG ? madrid(nextG.utc) : null, home = nextG ? nextG.h.t === P.t : true;
-          sub += "  ·  " + (home ? "vs " : "@ ") + nextOpp + (t && t.d ? " · " + t.d + " " + t.h : "");
-        }
-        x.font = "500 30px " + F; x.fillStyle = "#c7cbd2"; x.fillText(sub, 80, 305);
-        var fl = [filterLabel(), st.opp !== "all" ? "vs " + st.opp : "", st.loc === "1" ? "solo local" : st.loc === "0" ? "solo visitante" : ""].filter(Boolean).join(" · ");
-        if (fl) { x.font = "500 24px " + M; x.fillStyle = "#ffd23f"; x.fillText("Filtro: " + fl, 80, 345); }
-        // prop
-        rr(80, 380, W - 160, 150, 26); x.fillStyle = "rgba(16,18,22,.92)"; x.fill(); x.strokeStyle = "rgba(25,240,139,.45)"; x.lineWidth = 2; x.stroke();
-        x.font = "700 24px " + M; x.fillStyle = "#19f08b"; x.fillText("PROP", 116, 428);
-        fitText("Más de " + fmt(line) + " " + s.l.toLowerCase(), W - 232, 62, "800"); x.fillStyle = "#f4f5f7"; x.fillText("Más de " + fmt(line) + " " + s.l.toLowerCase(), 116, 497);
-        // aciertos
-        var n = hits.length, gap = 16, tw = (W - 160 - gap * (n - 1)) / n;
-        hits.forEach(function (hh, i) {
-          var r = hitOf(s, hh[1], line), x0 = 80 + i * (tw + gap);
-          rr(x0, 560, tw, 150, 20); x.fillStyle = "#171a20"; x.fill();
-          x.textAlign = "center"; x.font = "600 22px " + M; x.fillStyle = "#8b919c"; x.fillText(hh[0], x0 + tw / 2, 600);
-          x.font = "800 54px " + F; x.fillStyle = r ? (r.p >= 50 ? "#19f08b" : "#ff4766") : "#5b616b"; x.fillText(r ? Math.round(r.p) + "%" : "—", x0 + tw / 2, 662);
-          x.font = "500 24px " + M; x.fillStyle = "#8b919c"; x.fillText(r ? r.o + "/" + r.n : "", x0 + tw / 2, 694);
-          x.textAlign = "left";
-        });
-        // gráfico
-        var cx0 = 80, cy0 = 790, cw = W - 160, ch = 330, xs = shown.map(function (g) { return val(s, g); });
-        var real = xs.filter(function (v) { return v != null; }), mx = Math.max.apply(null, real.concat([line, 1])) * 1.15;
-        x.font = "600 24px " + M; x.fillStyle = "#8b919c"; x.fillText("ÚLTIMOS " + shown.length + " PARTIDOS", cx0, 765);
-        x.textAlign = "right"; x.fillText("MEDIA " + fmt(avgOf(s, shown)), cx0 + cw, 765); x.textAlign = "left";
-        var bw = cw / Math.max(1, shown.length), Y = function (v) { return cy0 + ch - v / mx * ch; };
-        x.strokeStyle = "#23272f"; x.lineWidth = 1; x.beginPath(); x.moveTo(cx0, cy0 + ch); x.lineTo(cx0 + cw, cy0 + ch); x.stroke();
-        shown.forEach(function (g, i) {
-          var v = xs[i]; if (v == null) return;
-          var bx = cx0 + i * bw + bw * 0.14, w = bw * 0.72, y = Y(v), over = v > line;
-          rr(bx, y, w, Math.max(4, cy0 + ch - y), Math.min(10, w / 3)); x.fillStyle = over ? "#19f08b" : v === line ? "#8b919c" : "#ff4766"; x.fill();
-          x.textAlign = "center";
-          x.font = "700 " + (bw > 60 ? 26 : 20) + "px " + M; x.fillStyle = "#f4f5f7"; x.fillText(fmt(v, s.pct ? 0 : (Number.isInteger(v) ? 0 : 1)), bx + w / 2, y - 10);
-          x.font = "500 " + (bw > 60 ? 20 : 16) + "px " + M; x.fillStyle = "#8b919c"; x.fillText(g.o || "", bx + w / 2, cy0 + ch + 30);
-          x.textAlign = "left";
-        });
-        x.setLineDash([14, 10]); x.strokeStyle = "#ffd23f"; x.lineWidth = 4; x.beginPath(); x.moveTo(cx0, Y(line)); x.lineTo(cx0 + cw, Y(line)); x.stroke(); x.setLineDash([]);
-        x.font = "800 24px " + M; var lt = fmt(line), lw = x.measureText(lt).width + 20;
-        rr(cx0 + cw - lw, Y(line) - 38, lw, 32, 8); x.fillStyle = "#ffd23f"; x.fill(); x.fillStyle = "#08090b"; x.fillText(lt, cx0 + cw - lw + 10, Y(line) - 13);
-        // pie
-        x.strokeStyle = "#23272f"; x.lineWidth = 2; x.beginPath(); x.moveTo(80, 1190); x.lineTo(W - 80, 1190); x.stroke();
-        x.font = "500 24px " + F; x.fillStyle = "#8b919c"; x.fillText("Gráficos y estadísticas gratis, en español:", 80, 1232);
-        fitText(site, W - 160, 34, "800"); x.fillStyle = "#19f08b"; x.fillText(site, 80, 1274);
-        x.font = "500 20px " + M; x.fillStyle = "#5b616b"; x.fillText("+18 · Juega con responsabilidad · jugarbien.es", 80, 1316);
-        x.textAlign = "right"; x.fillStyle = "#2aabee"; x.font = "700 20px " + M; x.fillText("Telegram: NBA LAB", W - 80, 1316); x.textAlign = "left";
-        openShare(cv, s, line, site);
-      }
-      var url = BRAND.photoUrl ? BRAND.photoUrl(P.id) : "", done = false;
-      function go(img) { if (done) return; done = true; draw(img); }
-      var ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
-      ready.then(function () {
-        if (!url) return go(null);
-        var img = new Image(); img.crossOrigin = "anonymous";
-        img.onload = function () { go(img); }; img.onerror = function () { go(null); };
-        setTimeout(function () { go(null); }, 2500);
-        img.src = url + (url.indexOf("?") > -1 ? "&" : "?") + "cors=1";
-      });
-    }
-    function openShare(cv, s, line, site) {
-      var old = $(".share-modal"); if (old) old.remove();
-      var hit10 = hitOf(s, filtered().slice(-10), line);
-      var text = P.n + " · Más de " + fmt(line) + " " + s.l.toLowerCase() + (hit10 ? " · L10 " + hit10.o + "/" + hit10.n : "") + (nextOpp ? " · vs " + nextOpp : "") + "\n📊 " + "https://" + site + "\n#NBA #props";
-      var fname = "nbalab-" + (slugOf(P.id) || P.id) + "-" + s.k + "-" + String(line).replace(".", "_") + ".png";
-      var m = document.createElement("div");
-      m.className = "share-modal";
-      m.innerHTML = '<div class="share-card" role="dialog" aria-label="Imagen para compartir"><button class="share-x" type="button" aria-label="Cerrar">×</button>' +
-        '<img alt="Imagen para compartir" src="' + cv.toDataURL("image/png") + '">' +
-        '<div class="share-actions"><button type="button" class="btn btn-primary" data-sh="share" hidden>Compartir</button>' +
-        '<button type="button" class="btn btn-ghost" data-sh="dl">Descargar imagen</button>' +
-        '<button type="button" class="btn btn-ghost" data-sh="copy" hidden>Copiar imagen</button>' +
-        '<button type="button" class="btn btn-ghost" data-sh="txt">Copiar texto para X</button></div>' +
-        '<p class="mono small share-msg" data-sh-msg></p></div>';
-      document.body.appendChild(m);
-      var msg = $("[data-sh-msg]", m);
-      function close() { m.remove(); }
-      $(".share-x", m).addEventListener("click", close);
-      m.addEventListener("click", function (e) { if (e.target === m) close(); });
-      cv.toBlob(function (blob) {
-        if (!blob) return;
-        var file = null;
-        try { file = new File([blob], fname, { type: "image/png" }); } catch (_) {}
-        var bs = $('[data-sh="share"]', m), bc = $('[data-sh="copy"]', m);
-        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-          bs.hidden = false;
-          bs.addEventListener("click", function () { navigator.share({ files: [file], text: text }).catch(function () {}); });
-        }
-        if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
-          bc.hidden = false;
-          bc.addEventListener("click", function () {
-            navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(function () { msg.textContent = "Imagen copiada: pégala en X o Telegram."; }, function () { msg.textContent = "Tu navegador no deja copiar imágenes: usa Descargar."; });
-          });
-        }
-        $('[data-sh="dl"]', m).addEventListener("click", function () {
-          var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = fname;
-          document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-        });
-      }, "image/png");
-      $('[data-sh="txt"]', m).addEventListener("click", function () {
-        var ok = function () { msg.textContent = "Texto copiado."; };
-        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, function () { msg.textContent = text; });
-        else msg.textContent = text;
-      });
-    }
 
     syncChips();
     safe(renderCharts, "charts");
@@ -1842,6 +1848,16 @@
     $$("[data-m-card] [data-d]").forEach(function (b) { b.addEventListener("click", function () { setLine((parseFloat(lineInp.value) || 0) + (+b.dataset.d)); }); });
     $$("[data-m-card] [data-odd]").forEach(function (oi) { oi.addEventListener("input", function () { ms.odds[oi.dataset.odd] = oi.value; ms.manual = $$("[data-m-card] [data-odd]").some(function (x) { return x.value; }); renderValue(); }); });
 
+    var mShare = $("[data-m-share]");
+    if (mShare) mShare.addEventListener("click", function () {
+      if (!cur) return;
+      safe(function () {
+        var P = cur.P;
+        shareImage(STAT[ms.stat], pool(), parseFloat(String(lineInp.value).replace(",", ".")) || 0, {
+          P: P, games: cur.games, season: IDX.season, opp: oppOf(P.t), nextG: G, allOpp: ms.opp === "all",
+          filt: [filterNote(), ms.loc === "1" ? "solo local" : ms.loc === "0" ? "solo visitante" : ""].filter(Boolean).join(" · ") });
+      }, "share");
+    });
     var cur = null; // { P, games }
     function selectPlayer(id) {
       ms.pid = String(id);
