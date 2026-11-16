@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261116a" />
+  <link rel="stylesheet" href="styles.css?v=20261116b" />
 </head>
 <body data-page="home">
   <header class="nav" data-nav>
@@ -148,13 +148,15 @@
     <section class="section" id="defensa">
       <div class="section-head reveal">
         <p class="eyebrow mono">04 — Defensa por posición</p>
-        <h2>¿Qué rival concede más a cada posición?</h2>
-        <p class="section-lead">Lo que promedian bases y escoltas, aleros y pívots contra cada equipo esta temporada (jugadores con 20 minutos o más), y la diferencia con la media de la liga. Verde: concede más que la media (bueno para el over). Rojo: defiende mejor. El puesto 1º es el equipo que más concede. Pulsa una posición para ordenar.</p>
+        <h2>Ranking de defensas: ¿quién permite más a cada posición?</h2>
+        <p class="section-lead">Del 1º al 30º: el <b>1º</b> es el equipo que <b>más</b> permite (bueno para el más) y el <b>30º</b> el que menos (bueno para el menos). Se calcula con lo que promedian bases y escoltas, aleros y pívots contra cada equipo esta temporada (jugadores con 20 minutos o más). Elige la posición y pulsa una estadística para ordenar.</p>
       </div>
       <div class="toolbar">
+        <div class="seg" data-dvp-view><button data-v="rank" class="on">Ranking 1-30</button><button data-v="pos">Comparar posiciones</button></div>
+        <div class="seg" data-dvp-pos><button data-v="G" class="on">Bases/escoltas</button><button data-v="F">Aleros</button><button data-v="C">Pívots</button></div>
         <select class="input" data-dvp-stat aria-label="Estadística"></select>
-        <div class="seg" data-dvp-pos><button data-v="G">Bases/escoltas</button><button data-v="F">Aleros</button><button data-v="C" class="on">Pívots</button></div>
       </div>
+      <p class="filter-note mono" data-dvp-hint></p>
       <div class="table-wrap"><table class="table dvp" data-dvp></table></div>
     </section>
 
@@ -193,6 +195,7 @@
   <script defer src="lib/manifest.js?v=20261109d"></script>
   <script defer src="data/schedule.js?v=202611161009"></script>
   <script defer src="data/index.js?v=202611161009"></script>
-  <script defer src="main.js?v=20261116a"></script>
+  <script defer src="lib/dvp.js?v=20261116b"></script>
+  <script defer src="main.js?v=20261116b"></script>
 </body>
 </html>

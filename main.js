@@ -574,6 +574,7 @@
   function posGroup(p) { var c = String(p || "").charAt(0).toUpperCase(); return (c === "G" || c === "F" || c === "C") ? c : null; }
   function dvpData() {
     if (_dvp) return _dvp;
+    if (window.NBALAB_DVP) { _dvp = window.NBALAB_DVP.calcular(IDX); return _dvp; }
     var acc = {}, lg = {};
     function add(o, key, row) {
       o[key] = o[key] || { n: 0 };
@@ -626,42 +627,80 @@
   /* Texto corto del puesto: 1 = el equipo que más concede */
   function dvpRank(r, n) { return r == null ? "—" : r + "º/" + n; }
 
+  var RANK_COLS = ["pts", "fg3m", "reb", "ast", "pra", "stl", "blk"];
+  function rankClass(r, n) { return r == null ? "" : r <= 5 ? "rk-1" : r <= 10 ? "rk-2" : r > n - 5 ? "rk-5" : r > n - 10 ? "rk-4" : "rk-3"; }
   function mountDefense() {
     var host = $("[data-dvp]");
     if (!host) return;
     var D = dvpData();
     if (!D.nTeams) { host.innerHTML = '<p class="empty">Aún no hay partidos suficientes esta temporada.</p>'; return; }
-    var st = { stat: "pts", pos: "C" };
+    var st = { view: "rank", stat: "pts", pos: "G" };
     var sel = $("[data-dvp-stat]");
-    sel.innerHTML = DVP_STATS.map(function (s) { return '<option value="' + s + '">' + esc(STAT[s].l) + "</option>"; }).join("");
+    var SEL_STATS = ["pts", "fg3m", "reb", "ast", "pra", "pr", "pa", "ra", "stl", "blk", "sb"];
+    sel.innerHTML = SEL_STATS.map(function (s) { return '<option value="' + s + '">' + esc(STAT[s].l) + "</option>"; }).join("");
     var today = etToday(), playing = {};
     if (SCHED) SCHED.games.forEach(function (g) { if (g.d === today && g.st !== 3) { playing[g.h.t] = g.a.t; playing[g.a.t] = g.h.t; } });
+    function teamCell(t) {
+      var hoy = playing[t] ? ' <span class="badge ok">HOY vs ' + esc(playing[t]) + "</span>" : "";
+      return '<td class="lbl"><span class="dv-team">' + (logoUrl(t) ? '<img src="' + logoUrl(t) + '" alt="" loading="lazy" onerror="this.remove()">' : "") + esc(t) + "</span>" + hoy + "</td>";
+    }
+    function sorted(pos, stat) {
+      return Object.keys(D.teams).sort(function (a, b) {
+        var va = D.teams[a][pos][stat].v, vb = D.teams[b][pos][stat].v;
+        return (vb == null ? -1e9 : vb) - (va == null ? -1e9 : va);
+      });
+    }
+    /* Vista 1: ranking 1-30 de una posición en todas las estadísticas */
+    function renderRank() {
+      var cols = RANK_COLS.indexOf(st.stat) > -1 ? RANK_COLS : RANK_COLS.concat([st.stat]);
+      host.className = "table dvp rank";
+      host.innerHTML = "<thead><tr><th>#</th><th>Rival</th>" + cols.map(function (s) {
+        return '<th class="' + (s === st.stat ? "dv-sort" : "") + '" data-stat="' + s + '">' + esc(STAT[s].s) + (s === st.stat ? " ▼" : "") + "</th>";
+      }).join("") + "</tr></thead><tbody>" + sorted(st.pos, st.stat).map(function (t) {
+        var c = D.teams[t][st.pos];
+        return '<tr><td class="rk-num ' + rankClass(c[st.stat].r, D.nTeams) + '">' + (c[st.stat].r || "—") + "</td>" + teamCell(t) + cols.map(function (s) {
+          var x = c[s];
+          return '<td class="rk ' + (s === st.stat ? "dv-sort" : "") + '" title="' + esc(STAT[s].l) + ": " + fmt(x.v) + " (" + dvpPct(x.d) + " vs liga)" + '"><span class="rk-pill ' + rankClass(x.r, D.nTeams) + '">' + (x.r || "—") + "º</span><small>" + fmt(x.v) + " · " + dvpPct(x.d) + "</small></td>";
+        }).join("") + "</tr>";
+      }).join("") + "</tbody>";
+    }
+    /* Vista 2: una estadística, comparando las tres posiciones */
     function cell(t, g) {
       var c = D.teams[t][g], x = c[st.stat], low = c.n < 8;
       return '<td class="dv ' + dvpClass(x.d) + (g === st.pos ? " dv-sort" : "") + '" title="' + c.n + ' partidos de ' + POS_SHORT[g] + ' con ' + DVP_MIN + '+ min">' +
         "<b>" + fmt(x.v) + "</b><em>" + dvpPct(x.d) + "</em><small>" + dvpRank(x.r, D.nTeams) + (low ? " · pocos datos" : "") + "</small></td>";
     }
-    function render() {
-      var teams = Object.keys(D.teams).sort(function (a, b) {
-        var va = D.teams[a][st.pos][st.stat].v, vb = D.teams[b][st.pos][st.stat].v;
-        return (vb == null ? -1e9 : vb) - (va == null ? -1e9 : va);
-      });
-      var lgRow = '<tr class="dv-lg"><td class="lbl">Media de la liga</td>' + ["G", "F", "C"].map(function (g) { return '<td class="dv' + (g === st.pos ? " dv-sort" : "") + '"><b>' + fmt(D.lg[g][st.stat]) + "</b></td>"; }).join("") + "</tr>";
-      host.innerHTML = "<thead><tr><th>Rival</th>" + ["G", "F", "C"].map(function (g) {
+    function renderPos() {
+      host.className = "table dvp";
+      var lgRow = '<tr class="dv-lg"><td></td><td class="lbl">Media de la liga</td>' + ["G", "F", "C"].map(function (g) { return '<td class="dv' + (g === st.pos ? " dv-sort" : "") + '"><b>' + fmt(D.lg[g][st.stat]) + "</b></td>"; }).join("") + "</tr>";
+      host.innerHTML = "<thead><tr><th>#</th><th>Rival</th>" + ["G", "F", "C"].map(function (g) {
         return '<th class="' + (g === st.pos ? "dv-sort" : "") + '" data-pos="' + g + '">' + esc(POS_LBL[g]) + (g === st.pos ? " ▼" : "") + "</th>";
-      }).join("") + "</tr></thead><tbody>" + lgRow + teams.map(function (t) {
-        var hoy = playing[t] ? ' <span class="badge ok">HOY vs ' + esc(playing[t]) + "</span>" : "";
-        return '<tr><td class="lbl"><span class="dv-team">' + (logoUrl(t) ? '<img src="' + logoUrl(t) + '" alt="" loading="lazy" onerror="this.remove()">' : "") + esc(t) + "</span>" + hoy + "</td>" +
-          cell(t, "G") + cell(t, "F") + cell(t, "C") + "</tr>";
+      }).join("") + "</tr></thead><tbody>" + lgRow + sorted(st.pos, st.stat).map(function (t) {
+        var r = D.teams[t][st.pos][st.stat].r;
+        return '<tr><td class="rk-num ' + rankClass(r, D.nTeams) + '">' + (r || "—") + "</td>" + teamCell(t) + cell(t, "G") + cell(t, "F") + cell(t, "C") + "</tr>";
       }).join("") + "</tbody>";
     }
+    function render() {
+      sel.value = st.stat;
+      var hint = $("[data-dvp-hint]");
+      if (hint) hint.textContent = (st.view === "rank" ? "Ranking de " + POS_LBL[st.pos].toLowerCase() + " · ordenado por " + STAT[st.stat].l.toLowerCase() : "Ordenado por " + POS_LBL[st.pos].toLowerCase()) +
+        " · 1º = el que más permite, " + D.nTeams + "º = el que menos";
+      if (st.view === "rank") renderRank(); else renderPos();
+    }
     sel.addEventListener("change", function () { st.stat = sel.value; render(); });
-    var seg = $("[data-dvp-pos]");
-    function setPos(g) { st.pos = g; $$("button", seg).forEach(function (b) { b.classList.toggle("on", b.dataset.v === g); }); render(); }
-    seg.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) setPos(b.dataset.v); });
-    host.addEventListener("click", function (e) { var th = e.target.closest("th[data-pos]"); if (th) setPos(th.dataset.pos); });
+    function segOn(el, v) { $$("button", el).forEach(function (b) { b.classList.toggle("on", b.dataset.v === v); }); }
+    var segPos = $("[data-dvp-pos]"), segView = $("[data-dvp-view]");
+    function setPos(g) { st.pos = g; segOn(segPos, g); render(); }
+    segPos.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) setPos(b.dataset.v); });
+    if (segView) segView.addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; st.view = b.dataset.v; segOn(segView, st.view); render(); });
+    host.addEventListener("click", function (e) {
+      var th = e.target.closest("th[data-pos]"); if (th) return setPos(th.dataset.pos);
+      var ts = e.target.closest("th[data-stat]"); if (ts) { st.stat = ts.dataset.stat; render(); }
+    });
+    segOn(segPos, st.pos);
     render();
   }
+
 
   function mountCalendar() {
     var daysEl = $("[data-cal-days]"), gamesEl = $("[data-games]"), titleEl = $("[data-cal-title]");
