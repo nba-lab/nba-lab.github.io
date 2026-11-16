@@ -644,3 +644,15 @@ select.input { cursor: pointer; }
 .odd-td { white-space: nowrap; }
 .odd-v { font-family: var(--mono); font-weight: 800; color: var(--ink); }
 .odd-c { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-left: 4px; }
+
+/* ---------- defensa del rival en la página de partido ---------- */
+.m-dvp { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding: 10px 12px; border-radius: 10px; background: var(--bg-3); border: 1px solid var(--line); font-size: 14px; color: var(--ink); }
+.m-dvp b { color: var(--ink); }
+.m-dvp em { font-style: normal; font-weight: 700; }
+.m-dvp-rank { flex: none; font-family: var(--mono); font-size: 22px; font-weight: 800; line-height: 1; }
+.m-dvp-rank small { font-size: 12px; color: var(--dim); }
+.m-dvp.dv-up { border-color: rgba(25, 240, 139, .45); background: rgba(25, 240, 139, .07); }
+.m-dvp.dv-up .m-dvp-rank, .m-dvp.dv-up em { color: var(--over); }
+.m-dvp.dv-down { border-color: rgba(255, 71, 102, .45); background: rgba(255, 71, 102, .07); }
+.m-dvp.dv-down .m-dvp-rank, .m-dvp.dv-down em { color: var(--under); }
+.m-dvp.dv-eq .m-dvp-rank, .m-dvp.dv-eq em { color: var(--mute); }

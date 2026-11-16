@@ -743,6 +743,16 @@
     $$("[data-cl]", host).forEach(function (b) { b.addEventListener("click", function () { onLine(parseFloat(b.dataset.cl)); }); });
   }
 
+  /* Franja "BOS es el 2º de 30 que más triples permite a bases" (ficha de jugador y partido) */
+  function dvpLineHTML(opp, pos, stat) {
+    var i = opp && window.NBALAB_DVP ? window.NBALAB_DVP.info(dvpData(), opp, pos, stat, "over") : null;
+    if (!i) return "";
+    var cl = i.nivel > 0 ? "dv-up" : i.nivel < 0 ? "dv-down" : "dv-eq";
+    return '<div class="m-dvp ' + cl + '"><span class="m-dvp-rank">' + i.rank + "º<small>/" + i.n + "</small></span><span>🛡️ " +
+      "<b>" + esc(opp) + "</b> es el <b>" + i.rank + "º de " + i.n + "</b> que más " + esc(i.statN) + " permite a " + esc(i.posN) +
+      (i.dif != null ? " (" + (i.dif > 0 ? "+" : "") + Math.round(i.dif) + "% vs media)" : "") +
+      " · <em>" + esc(i.etiqueta) + " para el más</em></span></div>";
+  }
   /* Texto corto del puesto: 1 = el equipo que más concede */
   function dvpRank(r, n) { return r == null ? "—" : r + "º/" + n; }
 
@@ -1198,6 +1208,7 @@
           '<div style="display:flex;gap:8px;align-items:center"><div class="line-input"><button type="button" data-d="-1" aria-label="Bajar">−</button><input type="number" step="0.5" value="' + line + '" aria-label="Línea de apuesta"/><button type="button" data-d="1" aria-label="Subir">+</button></div>' +
           '<button class="share-btn" type="button" title="Crear imagen para compartir en X o Telegram" aria-label="Compartir imagen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Imagen</span></button>' +
           '<button class="x" title="Quitar gráfico" aria-label="Quitar gráfico">×</button></div></div>' +
+          dvpLineHTML(nextOpp, P.p, kk) +
           '<div class="casas-host"></div>' +
           '<div class="odds-row"><span class="mono tb-lbl">Calcular valor</span>' +
           '<label class="odd"><span>Over</span><input type="text" inputmode="decimal" placeholder="1,85" data-odd="o" value="' + esc(st.odds[kk + "o"] || "") + '"/></label>' +
@@ -1875,6 +1886,8 @@
       if (L == null) L = cuoMain(P.id, ms.stat);
       if (L == null) L = lineDefault(avgOf(s, pl.slice(-20)));
       lineInp.value = L;
+      var mdv = $("[data-m-dvp]");
+      if (mdv) { var dvh = dvpLineHTML(opp, P.p, ms.stat); mdv.hidden = !dvh; mdv.innerHTML = dvh; }
       var mc = $("[data-m-casas]");
       if (mc) {
         mc.innerHTML = casasRowHTML(P.id, ms.stat, L);
