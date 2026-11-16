@@ -100,11 +100,22 @@
     var xs = vals(s, games);
     return xs.length ? xs.reduce(function (p, c) { return p + c; }, 0) / xs.length : null;
   }
+  /* Lado del gráfico: "over" (Más de) o "under" (Menos de). Se recuerda en el navegador. */
+  var SIDE = store("nl-side") === "under" ? "under" : "over";
+  function setSide(v) { SIDE = v === "under" ? "under" : "over"; store("nl-side", SIDE); }
+  function hitGood(x, line) { return SIDE === "under" ? x < line : x > line; }
+  function sideTxt() { return SIDE === "under" ? "Menos de" : "Más de"; }
+  function sideSegHTML(attr) {
+    return '<div class="seg side-seg" ' + attr + ' title="Ver aciertos del Más o del Menos"><button type="button" data-v="over"' + (SIDE === "over" ? ' class="on"' : "") + '>Más</button><button type="button" data-v="under"' + (SIDE === "under" ? ' class="on"' : "") + ">Menos</button></div>";
+  }
+  function legendHTML() {
+    return '<span><i class="sq" style="background:var(--over)"></i>Acierto del ' + (SIDE === "under" ? "Menos" : "Más") + '</span><span><i class="sq" style="background:var(--under)"></i>Fallo</span>';
+  }
   function hitOf(s, games, line) {
     var xs = vals(s, games);
     if (!xs.length) return null;
     var o = 0, pu = 0;
-    xs.forEach(function (x) { if (x > line) o++; else if (x === line) pu++; });
+    xs.forEach(function (x) { if (hitGood(x, line)) o++; else if (x === line) pu++; });
     return { o: o, n: xs.length, push: pu, p: o / xs.length * 100 };
   }
   function pctColor(p) {
@@ -447,7 +458,7 @@
       var w2 = Math.max(1, Math.min(64, bw * (1 - gap))), bx = pl + (i2 + 0.5) * bw - w2 / 2;
       if (x == null) { out.push('<rect class="bar p" data-i="' + i2 + '" x="' + bx.toFixed(1) + '" y="' + (pt + ih - 2) + '" width="' + w2.toFixed(1) + '" height="2"/>'); return; }
       var y0 = Y(Math.max(0, x)), hh = Math.max(2, pt + ih - y0);
-      var c = x > line ? "o" : x < line ? "u" : "p";
+      var c = x === line ? "p" : hitGood(x, line) ? "o" : "u";
       out.push('<rect class="bar ' + c + '" data-i="' + i2 + '" x="' + bx.toFixed(1) + '" y="' + (pt + ih - hh).toFixed(1) + '" width="' + w2.toFixed(1) + '" height="' + hh.toFixed(1) + '" rx="' + Math.min(6, w2 / 4).toFixed(1) + '"/>');
       if (showVals && hh >= 16) out.push('<text class="bar-v" x="' + (bx + w2 / 2).toFixed(1) + '" y="' + (pt + ih - 5).toFixed(1) + '" text-anchor="middle" font-size="' + Math.min(13, w2 * 0.45).toFixed(0) + '">' + fmt(x, s.pct || x % 1 ? 1 : 0) + "</text>");
     });
@@ -745,13 +756,13 @@
 
   /* Franja "BOS es el 2º de 30 que más triples permite a bases" (ficha de jugador y partido) */
   function dvpLineHTML(opp, pos, stat) {
-    var i = opp && window.NBALAB_DVP ? window.NBALAB_DVP.info(dvpData(), opp, pos, stat, "over") : null;
+    var i = opp && window.NBALAB_DVP ? window.NBALAB_DVP.info(dvpData(), opp, pos, stat, SIDE) : null;
     if (!i) return "";
     var cl = i.nivel > 0 ? "dv-up" : i.nivel < 0 ? "dv-down" : "dv-eq";
     return '<div class="m-dvp ' + cl + '"><span class="m-dvp-rank">' + i.rank + "º<small>/" + i.n + "</small></span><span>🛡️ " +
       "<b>" + esc(opp) + "</b> es el <b>" + i.rank + "º de " + i.n + "</b> que más " + esc(i.statN) + " permite a " + esc(i.posN) +
       (i.dif != null ? " (" + (i.dif > 0 ? "+" : "") + Math.round(i.dif) + "% vs media)" : "") +
-      " · <em>" + esc(i.etiqueta) + " para el más</em></span></div>";
+      " · <em>" + esc(i.etiqueta) + (SIDE === "under" ? " para el menos" : " para el más") + "</em></span></div>";
   }
   /* Texto corto del puesto: 1 = el equipo que más concede */
   function dvpRank(r, n) { return r == null ? "—" : r + "º/" + n; }
@@ -995,7 +1006,7 @@
       // prop
       rr(80, 380, W - 160, 150, 26); x.fillStyle = "rgba(16,18,22,.92)"; x.fill(); x.strokeStyle = "rgba(25,240,139,.45)"; x.lineWidth = 2; x.stroke();
       x.font = "700 24px " + M; x.fillStyle = "#19f08b"; x.fillText("PROP", 116, 428);
-      fitText("Más de " + fmt(line) + " " + s.l.toLowerCase(), W - 232, 62, "800"); x.fillStyle = "#f4f5f7"; x.fillText("Más de " + fmt(line) + " " + s.l.toLowerCase(), 116, 497);
+      fitText(sideTxt() + " " + fmt(line) + " " + s.l.toLowerCase(), W - 232, 62, "800"); x.fillStyle = "#f4f5f7"; x.fillText(sideTxt() + " " + fmt(line) + " " + s.l.toLowerCase(), 116, 497);
       // aciertos
       var n = hits.length, gap = 16, tw = (W - 160 - gap * (n - 1)) / n;
       hits.forEach(function (hh, i) {
@@ -1015,7 +1026,7 @@
       x.strokeStyle = "#23272f"; x.lineWidth = 1; x.beginPath(); x.moveTo(cx0, cy0 + ch); x.lineTo(cx0 + cw, cy0 + ch); x.stroke();
       shown.forEach(function (g, i) {
         var v = xs[i]; if (v == null) return;
-        var bx = cx0 + i * bw + bw * 0.14, w = bw * 0.72, y = Y(v), over = v > line;
+        var bx = cx0 + i * bw + bw * 0.14, w = bw * 0.72, y = Y(v), over = hitGood(v, line);
         rr(bx, y, w, Math.max(4, cy0 + ch - y), Math.min(10, w / 3)); x.fillStyle = over ? "#19f08b" : v === line ? "#8b919c" : "#ff4766"; x.fill();
         x.textAlign = "center";
         x.font = "700 " + (bw > 60 ? 26 : 20) + "px " + M; x.fillStyle = "#f4f5f7"; x.fillText(fmt(v, s.pct ? 0 : (Number.isInteger(v) ? 0 : 1)), bx + w / 2, y - 10);
@@ -1048,7 +1059,7 @@
     var P = C.P, nextOpp = C.opp;
     var old = $(".share-modal"); if (old) old.remove();
     var hit10 = hitOf(s, pool.slice(-10), line);
-    var text = P.n + " · Más de " + fmt(line) + " " + s.l.toLowerCase() + (hit10 ? " · L10 " + hit10.o + "/" + hit10.n : "") + (nextOpp ? " · vs " + nextOpp : "") + "\n📊 " + "https://" + site + "\n#NBA #props";
+    var text = P.n + " · " + sideTxt() + " " + fmt(line) + " " + s.l.toLowerCase() + (hit10 ? " · L10 " + hit10.o + "/" + hit10.n : "") + (nextOpp ? " · vs " + nextOpp : "") + "\n📊 " + "https://" + site + "\n#NBA #props";
     var fname = "nbalab-" + (slugOf(P.id) || P.id) + "-" + s.k + "-" + String(line).replace(".", "_") + ".png";
     var m = document.createElement("div");
     m.className = "share-modal";
@@ -1219,6 +1230,16 @@
       });
     }
     seg("[data-range]", "range", renderCharts);
+    var sideBox = $("[data-side]");
+    if (sideBox) {
+      sideBox.innerHTML = sideSegHTML("").replace(/^<div[^>]*>|<\/div>$/g, "");
+      sideBox.addEventListener("click", function (e) {
+        var b = e.target.closest("button"); if (!b) return;
+        setSide(b.dataset.v);
+        $$("button", sideBox).forEach(function (x) { x.classList.toggle("on", x.dataset.v === SIDE); });
+        safe(renderCharts, "charts"); safe(renderLadder, "ladder");
+      });
+    }
     $$("[data-range] button").forEach(function (x) { x.classList.toggle("on", +x.dataset.v === st.range); });
     seg("[data-loc]", "loc", renderCharts);
     seg("[data-sample]", "sample", renderSplits);
@@ -1312,7 +1333,7 @@
       if (st.opp === "all" && h2h) W2.push(["VS " + h2h + (nextOpp ? " ▸" : ""), games.filter(function (g) { return g.o === h2h; })]);
       var xsAll = vals(s, pool), streak = 0, dir = null;
       for (var i = xsAll.length - 1; i >= 0; i--) {
-        var o = xsAll[i] > line;
+        var o = hitGood(xsAll[i], line);
         if (dir === null) dir = o;
         if (o !== dir) break;
         streak++;
@@ -1320,7 +1341,7 @@
       return W2.map(function (w) {
         var h = hitOf(s, w[1], line);
         return '<div class="hit"><span>' + esc(w[0]) + "</span>" + (h ? '<b style="color:' + (h.p >= 50 ? "var(--over)" : "var(--under)") + '">' + Math.round(h.p) + "%</b><em>" + h.o + "/" + h.n + "</em>" : "<b>—</b>") + "</div>";
-      }).join("") + (xsAll.length ? '<div class="hit"><span>RACHA</span><b style="color:' + (dir ? "var(--over)" : "var(--under)") + '">' + streak + " " + (dir ? "O" : "U") + "</b></div>" : "");
+      }).join("") + (xsAll.length ? '<div class="hit"><span>RACHA</span><b style="color:' + (dir ? "var(--over)" : "var(--under)") + '">' + streak + " " + (dir ? "✓" : "✗") + "</b></div>" : "");
     }
 
     function renderCharts() {
@@ -1350,7 +1371,7 @@
           '<label class="odd"><span>Under</span><input type="text" inputmode="decimal" placeholder="1,95" data-odd="u" value="' + esc(st.odds[kk + "u"] || "") + '"/></label>' +
           '<div class="value-out"></div></div>' +
           '<div class="hit-strip"></div><div class="plot"></div>' +
-          '<div class="legend"><span><i class="sq" style="background:var(--over)"></i>Over</span><span><i class="sq" style="background:var(--under)"></i>Under</span>' +
+          '<div class="legend">' + legendHTML() +
           '<span><i style="border-color:var(--bet)"></i>Línea</span><span><i style="border-color:#fff;border-top-style:dashed"></i>Media ' + shown.length + '</span><span><i style="border-color:#6aa3ff;border-top-style:dotted"></i>Media 20</span><span><i style="border-color:#c08bff;border-top-style:dotted"></i>Media 10</span>' +
           (st.showMin ? '<span><i style="border-color:#4cc9ff"></i>Minutos (eje derecho)</span>' : "") +
           (mx.length ? "<span>Máx " + fmt(Math.max.apply(null, mx), s.pct ? 1 : 0) + " · Mín " + fmt(Math.min.apply(null, mx), s.pct ? 1 : 0) + "</span>" : "") + "</div>";
@@ -1427,9 +1448,10 @@
         cuoPrefList(cuoLines(P.id, st.ladder)).forEach(function (x) { if (x.o && !lines.some(function (l) { return sameL(l, x.l); })) lines.push(x.l); });
         lines.sort(function (a, b) { return a - b; });
       }
-      var h = "<thead><tr><th>Línea (over)</th>" + (conCuotas ? "<th>Cuota</th>" : "") + W3.map(function (w) { return "<th>" + w[0] + "</th>"; }).join("") + "</tr></thead><tbody>";
+      var sd = SIDE === "under" ? "u" : "o";
+      var h = "<thead><tr><th>Línea (" + (SIDE === "under" ? "menos" : "más") + ")</th>" + (conCuotas ? "<th>Cuota</th>" : "") + W3.map(function (w) { return "<th>" + w[0] + "</th>"; }).join("") + "</tr></thead><tbody>";
       lines.forEach(function (L) {
-        h += '<tr><td class="line">+' + fmt(L) + "</td>" + (conCuotas ? '<td class="odd-td">' + oddCell(cuoBest(cuoAt(P.id, st.ladder, L), "o")) + "</td>" : "") +
+        h += '<tr><td class="line">' + (SIDE === "under" ? "−" : "+") + fmt(L) + "</td>" + (conCuotas ? '<td class="odd-td">' + oddCell(cuoBest(cuoAt(P.id, st.ladder, L), sd)) + "</td>" : "") +
           W3.map(function (w) { return "<td>" + pctCell(hitOf(s, w[1], L)) + "</td>"; }).join("") + "</tr>";
       });
       $("[data-ladder]").innerHTML = h + "</tbody>";
@@ -1774,6 +1796,16 @@
       });
     }
     seg2("[data-m-range]", "range"); seg2("[data-m-loc]", "loc");
+    var mSide = $("[data-m-side]");
+    if (mSide) {
+      mSide.innerHTML = sideSegHTML("").replace(/^<div[^>]*>|<\/div>$/g, "");
+      mSide.addEventListener("click", function (e) {
+        var b = e.target.closest("button"); if (!b) return;
+        setSide(b.dataset.v);
+        $$("button", mSide).forEach(function (x) { x.classList.toggle("on", x.dataset.v === SIDE); });
+        renderChart();
+      });
+    }
     $$("[data-m-role] [data-role]").forEach(function (c) {
       c.addEventListener("change", function () {
         ms[c.dataset.role] = c.checked;
@@ -1915,6 +1947,7 @@
         $$("[data-m-card] [data-odd]").forEach(function (oi) { oi.value = ms.odds[oi.dataset.odd] || ""; });
       }
       var h = hitOf(s, shown, L), mAvg = avgOf(STAT.min, shown);
+      var mLeg = $("[data-m-leg]"); if (mLeg) mLeg.innerHTML = legendHTML();
       $("[data-m-player]").innerHTML = photoHTML(P, "m-photo") +
         '<div class="m-pinfo"><h2>' + esc(P.n) + '</h2><p class="mono">' + esc([P.t, P.p, P.j ? "#" + P.j : ""].filter(Boolean).join(" · ")) + " · " + esc(s.l) + " · últimos " + shown.length + "</p></div>" +
         '<div class="m-sum"><div><span>Media gráfico</span><b>' + fmt(avgOf(s, shown)) + "</b></div>" +

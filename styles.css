@@ -667,3 +667,7 @@ select.input { cursor: pointer; }
 .btn-x .tg-ic { width: 16px; height: 16px; }
 @media (max-width: 900px) { .nav-x span { display: none; } .nav-x { padding: 9px; margin-left: 6px; } }
 @media (max-width: 480px) { .nav-x ~ .nav-status { display: none; } }
+
+/* ---------- Más / Menos ---------- */
+.leg-side { display: contents; }
+.side-seg button[data-v="under"].on { background: var(--under); color: #fff; }
