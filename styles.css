@@ -656,3 +656,14 @@ select.input { cursor: pointer; }
 .m-dvp.dv-down { border-color: rgba(255, 71, 102, .45); background: rgba(255, 71, 102, .07); }
 .m-dvp.dv-down .m-dvp-rank, .m-dvp.dv-down em { color: var(--under); }
 .m-dvp.dv-eq .m-dvp-rank, .m-dvp.dv-eq em { color: var(--mute); }
+
+/* ---------- X (Twitter) ---------- */
+.nav-x { display: inline-flex; align-items: center; gap: 7px; margin-left: 10px; padding: 8px 14px; border-radius: 99px; background: #f4f5f7; color: #000; text-decoration: none; font-weight: 700; font-size: 13px; transition: transform .2s, background .2s; }
+.nav-x:hover { transform: translateY(-1px); background: #fff; }
+.nav-x .tg-ic { width: 15px; height: 15px; }
+.nav-x + .nav-status { margin-left: 14px; }
+.btn-x { display: inline-flex; align-items: center; gap: 9px; background: #000; color: #fff; border: 1px solid #3a404a; text-decoration: none; }
+.btn-x:hover { border-color: #fff; }
+.btn-x .tg-ic { width: 16px; height: 16px; }
+@media (max-width: 900px) { .nav-x span { display: none; } .nav-x { padding: 9px; margin-left: 6px; } }
+@media (max-width: 480px) { .nav-x ~ .nav-status { display: none; } }
