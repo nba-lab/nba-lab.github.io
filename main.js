@@ -560,6 +560,109 @@
   function normTxt(s) { return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
   function teamRec(t) { return (t.w != null && t.l != null && (t.w + t.l) > 0) ? t.w + "-" + t.l : ""; }
 
+  /* =========================================================================
+     DEFENSA DEL RIVAL POR POSICIÓN
+     Se calcula en el navegador con los partidos de esta temporada de todos los
+     jugadores (index.js): qué promedia cada posición contra cada equipo.
+     Solo cuentan los jugadores con 20 minutos o más en ese partido.
+     ========================================================================= */
+  var POS_LBL = { G: "Bases y escoltas", F: "Aleros y ala-pívots", C: "Pívots" };
+  var POS_SHORT = { G: "bases/escoltas", F: "aleros", C: "pívots" };
+  var DVP_STATS = ["pts", "reb", "ast", "pra", "fg3m", "stl", "blk"];
+  var DVP_MIN = 20;
+  var _dvp = null;
+  function posGroup(p) { var c = String(p || "").charAt(0).toUpperCase(); return (c === "G" || c === "F" || c === "C") ? c : null; }
+  function dvpData() {
+    if (_dvp) return _dvp;
+    var acc = {}, lg = {};
+    function add(o, key, row) {
+      o[key] = o[key] || { n: 0 };
+      var b = o[key]; b.n++;
+      DVP_STATS.forEach(function (s) { b[s] = (b[s] || 0) + row[s]; });
+    }
+    IDX.players.forEach(function (p) {
+      var g = posGroup(p.p), L = p.l20o ? p.l20o.length : 0;
+      if (!g || !L || !p.l20) return;
+      var n = Math.min(p.gp || 0, L);
+      for (var i = L - n; i < L; i++) {
+        var m = p.l20.min ? p.l20.min[i] : null, o = p.l20o[i];
+        if (m == null || m < DVP_MIN || !o) continue;
+        var row = {}, ok = true;
+        ["pts", "reb", "ast", "fg3m", "stl", "blk"].forEach(function (s) { var v = p.l20[s] ? p.l20[s][i] : null; if (v == null) ok = false; row[s] = v || 0; });
+        if (!ok) continue;
+        row.pra = row.pts + row.reb + row.ast;
+        acc[o] = acc[o] || {};
+        add(acc[o], g, row);
+        add(lg, g, row);
+      }
+    });
+    var teams = Object.keys(acc).filter(function (t) { return TEAM_ID[t]; });
+    var out = { teams: {}, lg: {}, nTeams: teams.length };
+    ["G", "F", "C"].forEach(function (g) {
+      var L = lg[g];
+      out.lg[g] = {};
+      DVP_STATS.forEach(function (s) { out.lg[g][s] = L && L.n ? L[s] / L.n : null; });
+      teams.forEach(function (t) {
+        var b = acc[t][g];
+        out.teams[t] = out.teams[t] || {};
+        var r = { n: b ? b.n : 0 };
+        DVP_STATS.forEach(function (s) {
+          var v = b && b.n ? b[s] / b.n : null, base = out.lg[g][s];
+          r[s] = { v: v, d: (v != null && base) ? (v - base) / base * 100 : null, r: null };
+        });
+        out.teams[t][g] = r;
+      });
+      DVP_STATS.forEach(function (s) {
+        teams.filter(function (t) { return out.teams[t][g][s].v != null; })
+          .sort(function (a, b) { return out.teams[b][g][s].v - out.teams[a][g][s].v; })
+          .forEach(function (t, i) { out.teams[t][g][s].r = i + 1; });
+      });
+    });
+    _dvp = out;
+    return out;
+  }
+  function dvpClass(d) { return d == null ? "" : d >= 6 ? "dv-up" : d <= -6 ? "dv-down" : "dv-eq"; }
+  function dvpPct(d) { return d == null ? "—" : (d > 0 ? "+" : "") + Math.round(d) + "%"; }
+  /* Texto corto del puesto: 1 = el equipo que más concede */
+  function dvpRank(r, n) { return r == null ? "—" : r + "º/" + n; }
+
+  function mountDefense() {
+    var host = $("[data-dvp]");
+    if (!host) return;
+    var D = dvpData();
+    if (!D.nTeams) { host.innerHTML = '<p class="empty">Aún no hay partidos suficientes esta temporada.</p>'; return; }
+    var st = { stat: "pts", pos: "C" };
+    var sel = $("[data-dvp-stat]");
+    sel.innerHTML = DVP_STATS.map(function (s) { return '<option value="' + s + '">' + esc(STAT[s].l) + "</option>"; }).join("");
+    var today = etToday(), playing = {};
+    if (SCHED) SCHED.games.forEach(function (g) { if (g.d === today && g.st !== 3) { playing[g.h.t] = g.a.t; playing[g.a.t] = g.h.t; } });
+    function cell(t, g) {
+      var c = D.teams[t][g], x = c[st.stat], low = c.n < 8;
+      return '<td class="dv ' + dvpClass(x.d) + (g === st.pos ? " dv-sort" : "") + '" title="' + c.n + ' partidos de ' + POS_SHORT[g] + ' con ' + DVP_MIN + '+ min">' +
+        "<b>" + fmt(x.v) + "</b><em>" + dvpPct(x.d) + "</em><small>" + dvpRank(x.r, D.nTeams) + (low ? " · pocos datos" : "") + "</small></td>";
+    }
+    function render() {
+      var teams = Object.keys(D.teams).sort(function (a, b) {
+        var va = D.teams[a][st.pos][st.stat].v, vb = D.teams[b][st.pos][st.stat].v;
+        return (vb == null ? -1e9 : vb) - (va == null ? -1e9 : va);
+      });
+      var lgRow = '<tr class="dv-lg"><td class="lbl">Media de la liga</td>' + ["G", "F", "C"].map(function (g) { return '<td class="dv' + (g === st.pos ? " dv-sort" : "") + '"><b>' + fmt(D.lg[g][st.stat]) + "</b></td>"; }).join("") + "</tr>";
+      host.innerHTML = "<thead><tr><th>Rival</th>" + ["G", "F", "C"].map(function (g) {
+        return '<th class="' + (g === st.pos ? "dv-sort" : "") + '" data-pos="' + g + '">' + esc(POS_LBL[g]) + (g === st.pos ? " ▼" : "") + "</th>";
+      }).join("") + "</tr></thead><tbody>" + lgRow + teams.map(function (t) {
+        var hoy = playing[t] ? ' <span class="badge ok">HOY vs ' + esc(playing[t]) + "</span>" : "";
+        return '<tr><td class="lbl"><span class="dv-team">' + (logoUrl(t) ? '<img src="' + logoUrl(t) + '" alt="" loading="lazy" onerror="this.remove()">' : "") + esc(t) + "</span>" + hoy + "</td>" +
+          cell(t, "G") + cell(t, "F") + cell(t, "C") + "</tr>";
+      }).join("") + "</tbody>";
+    }
+    sel.addEventListener("change", function () { st.stat = sel.value; render(); });
+    var seg = $("[data-dvp-pos]");
+    function setPos(g) { st.pos = g; $$("button", seg).forEach(function (b) { b.classList.toggle("on", b.dataset.v === g); }); render(); }
+    seg.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) setPos(b.dataset.v); });
+    host.addEventListener("click", function (e) { var th = e.target.closest("th[data-pos]"); if (th) setPos(th.dataset.pos); });
+    render();
+  }
+
   function mountCalendar() {
     var daysEl = $("[data-cal-days]"), gamesEl = $("[data-games]"), titleEl = $("[data-cal-title]");
     if (!daysEl || !gamesEl) return;
@@ -828,6 +931,7 @@
     var hasMates = games.some(function (g) { return g.tm && g.tm.length; });
     var mateRange = {};
     games.forEach(function (g) {
+      if (g.t !== P.t) return; // solo cuenta el equipo actual (si coincidieron en otro equipo, no vale)
       (g.tm || []).forEach(function (id) {
         var r = mateRange[id];
         if (!r) mateRange[id] = [g.d, g.d]; else { if (g.d < r[0]) r[0] = g.d; if (g.d > r[1]) r[1] = g.d; }
@@ -932,6 +1036,7 @@
         card.innerHTML =
           '<div class="chart-head"><h3>' + esc(s.l) + "<small>" + shown.length + " partidos" + (st.opp !== "all" ? " vs " + esc(st.opp) : "") + (st.loc !== "all" ? (st.loc === "1" ? " · local" : " · visitante") : "") + (filterLabel() ? " · " + esc(filterLabel()) : "") + "</small></h3>" +
           '<div style="display:flex;gap:8px;align-items:center"><div class="line-input"><button type="button" data-d="-1" aria-label="Bajar">−</button><input type="number" step="0.5" value="' + line + '" aria-label="Línea de apuesta"/><button type="button" data-d="1" aria-label="Subir">+</button></div>' +
+          '<button class="share-btn" type="button" title="Crear imagen para compartir en X o Telegram" aria-label="Compartir imagen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Imagen</span></button>' +
           '<button class="x" title="Quitar gráfico" aria-label="Quitar gráfico">×</button></div></div>' +
           '<div class="odds-row"><span class="mono tb-lbl">Cuotas de tu casa</span>' +
           '<label class="odd"><span>Over</span><input type="text" inputmode="decimal" placeholder="1,85" data-odd="o" value="' + esc(st.odds[kk + "o"] || "") + '"/></label>' +
@@ -971,6 +1076,7 @@
         }
         inp.addEventListener("change", function () { apply(parseFloat(String(inp.value).replace(",", ".")) || 0); });
         $$("[data-d]", card).forEach(function (b) { b.addEventListener("click", function () { apply((parseFloat(inp.value) || 0) + (+b.dataset.d)); }); });
+        $(".share-btn", card).addEventListener("click", function () { safe(function () { shareImage(s, pool, parseFloat(String(inp.value).replace(",", ".")) || 0); }, "share"); });
         $(".x", card).addEventListener("click", function () {
           var i = st.stats.indexOf(kk);
           if (i > -1 && st.stats.length > 1) { st.stats.splice(i, 1); store("pl-stats", st.stats); syncChips(); renderCharts(); }
@@ -1142,8 +1248,226 @@
       $("[data-log]").innerHTML = h + "</tbody>";
     }
 
+
+    /* --- defensa del próximo rival contra su posición --- */
+    function renderDefense() {
+      var sec = document.getElementById("defensa"), host = $("[data-p-dvp]");
+      if (!sec || !host) return;
+      var g = posGroup(P.p), D = dvpData();
+      if (!nextOpp || !g || !D.teams[nextOpp]) { sec.hidden = true; return; }
+      sec.hidden = false;
+      var c = D.teams[nextOpp][g], l10 = games.slice(-10);
+      $("[data-p-dvp-title]").textContent = "Cómo defiende " + nextOpp + " a los " + POS_SHORT[g];
+      $("[data-p-dvp-lead]").innerHTML = "Lo que promedian los " + esc(POS_SHORT[g]) + " (" + esc(g) + ") contra " + esc(nextOpp) + " esta temporada, comparado con la media de la liga. " +
+        "Puesto 1º = el equipo que <b>más</b> concede (mejor para el over). " + c.n + " partidos de jugadores con " + DVP_MIN + "+ minutos.";
+      var good = [], bad = [];
+      host.innerHTML = DVP_STATS.map(function (s) {
+        var x = c[s];
+        if (x.d != null && x.d >= 6) good.push(STAT[s].l + " (" + dvpPct(x.d) + ")");
+        if (x.d != null && x.d <= -6) bad.push(STAT[s].l + " (" + dvpPct(x.d) + ")");
+        return '<div class="tile dv-tile ' + dvpClass(x.d) + '"><span>' + esc(STAT[s].s) + " CONCEDE</span><b>" + fmt(x.v) + "</b>" +
+          '<em>' + dvpPct(x.d) + " vs liga · " + dvpRank(x.r, D.nTeams) + "</em>" +
+          '<small>' + esc(P.n.split(" ").slice(-1)[0]) + " L10: " + fmt(avgOf(STAT[s], l10)) + "</small></div>";
+      }).join("");
+      var sum = [];
+      if (good.length) sum.push('<span class="dv-up">▲ Favorable para el over: ' + esc(good.join(", ")) + "</span>");
+      if (bad.length) sum.push('<span class="dv-down">▼ Defiende bien: ' + esc(bad.join(", ")) + "</span>");
+      if (!sum.length) sum.push('<span class="muted">Defensa en la media de la liga en todas las estadísticas.</span>');
+      if (c.n < 8) sum.push('<span class="muted">Pocos partidos todavía: tómalo con cautela.</span>');
+      $("[data-p-dvp-sum]").innerHTML = sum.join("");
+    }
+
+    /* --- rendimiento cuando falta un compañero --- */
+    function mateGames(id, mode) {
+      id = +id;
+      var r = mateRange[id], mi = mateInfo[id];
+      return games.filter(function (g) {
+        var has = (g.tm || []).indexOf(id) > -1;
+        if (mode === "con") return has && g.t === P.t;
+        if (!r || g.t !== P.t) return false;
+        var end = mi && mi.t === P.t ? "9999-12-31" : r[1];
+        return !has && g.d >= r[0] && g.d <= end;
+      });
+    }
+    function renderMates() {
+      var host = $("[data-mates]"), al = $("[data-mates-alert]");
+      if (!host) return;
+      if (!hasMates) { host.innerHTML = '<tbody><tr><td class="muted">Sin datos de compañeros todavía.</td></tr></tbody>'; return; }
+      var tl = teamLastOf(P.t), COLS = ["min", "pts", "reb", "ast", "pra", "fg3m"];
+      var rows = IDX.players.filter(function (p) { return p.t === P.t && String(p.id) !== String(P.id); })
+        .sort(function (a, b) { return (b.avg.min || 0) - (a.avg.min || 0); }).slice(0, 10)
+        .map(function (m) { return { m: m, con: mateGames(m.id, "con"), sin: mateGames(m.id, "sin"), baja: !!(tl && m.last < tl) }; })
+        .filter(function (r) { return r.con.length >= 3 && (r.sin.length >= 3 || r.baja); });
+      rows.sort(function (a, b) { return (b.baja - a.baja) || ((b.m.avg.min || 0) - (a.m.avg.min || 0)); });
+      if (!rows.length) { host.innerHTML = '<tbody><tr><td class="muted">Todavía no hay compañeros con al menos 3 partidos sin ellos en este equipo.</td></tr></tbody>'; return; }
+      var h = "<thead><tr><th>Compañero</th><th>PJ con / sin</th>" + COLS.map(function (c) { return "<th>" + STAT[c].s + " sin él</th>"; }).join("") + "</tr></thead><tbody>";
+      var alerts = [];
+      rows.forEach(function (r) {
+        var few = r.sin.length < 3;
+        h += '<tr data-mate-id="' + r.m.id + '" class="' + (r.baja ? "mate-baja" : "") + '"><td class="lbl">' + esc(r.m.n) + "<small>" + fmt(r.m.avg.min) + " min</small>" +
+          (r.baja ? ' <span class="badge warn">posible baja</span>' : "") + "</td><td>" + r.con.length + " / " + r.sin.length + "</td>" +
+          COLS.map(function (c) {
+            if (few) return '<td class="muted">—</td>';
+            var a = avgOf(STAT[c], r.sin), b = avgOf(STAT[c], r.con), d = (a != null && b != null) ? a - b : null;
+            var big = d != null && b ? Math.abs(d) / Math.max(1, Math.abs(b)) >= 0.1 : false;
+            return '<td class="mate-cell"><b>' + fmt(a) + '</b><em class="' + (d == null || !big ? "muted" : d > 0 ? "trend-up" : "trend-down") + '">' + (d == null ? "" : (d > 0 ? "+" : "") + fmt(d)) + "</em></td>";
+          }).join("") + "</tr>";
+        if (r.baja && !few) {
+          alerts.push("⚠ <b>" + esc(r.m.n) + "</b> no jugó el último partido de " + esc(P.t) + " (posible baja). Sin él, " + esc(P.n) + " promedia <b>" +
+            fmt(avgOf(STAT.pts, r.sin)) + " PTS · " + fmt(avgOf(STAT.pra, r.sin)) + " PRA · " + fmt(avgOf(STAT.min, r.sin)) + " MIN</b> en " + r.sin.length +
+            " partidos (con él: " + fmt(avgOf(STAT.pts, r.con)) + " PTS · " + fmt(avgOf(STAT.pra, r.con)) + " PRA).");
+        }
+      });
+      host.innerHTML = h + "</tbody>";
+      if (al) { al.hidden = !alerts.length; al.innerHTML = alerts.join("<br>"); }
+      host.addEventListener("click", function (e) {
+        var tr = e.target.closest("tr[data-mate-id]");
+        if (!tr) return;
+        st.mate = tr.dataset.mateId; st.mateMode = "sin";
+        var sel = $("[data-mate]"); if (sel) sel.value = st.mate;
+        $$("[data-mate-mode] button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === "sin"); });
+        renderCharts(); renderLadder();
+        var target = document.getElementById("graficos");
+        if (target) window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - 70, behavior: "smooth" });
+      });
+    }
+
+    /* --- imagen para compartir (X, Telegram, WhatsApp) --- */
+    function shareImage(s, pool, line) {
+      var shown = pool.slice(-15), W = 1080, H = 1350;
+      var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+      var x = cv.getContext("2d");
+      var F = "Inter, system-ui, sans-serif", M = "'JetBrains Mono', Consolas, monospace";
+      var site = "nba-lab.github.io/" + (slugOf(P.id) ? "jugador-" + slugOf(P.id) + ".html" : "");
+      function rr(x0, y0, w, h, r) { x.beginPath(); x.moveTo(x0 + r, y0); x.arcTo(x0 + w, y0, x0 + w, y0 + h, r); x.arcTo(x0 + w, y0 + h, x0, y0 + h, r); x.arcTo(x0, y0 + h, x0, y0, r); x.arcTo(x0, y0, x0 + w, y0, r); x.closePath(); }
+      function glow(cx, cy, r, col) { var g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, W, H); }
+      function fitText(t, maxW, size, weight) { do { x.font = weight + " " + size + "px " + F; size -= 2; } while (x.measureText(t).width > maxW && size > 30); }
+      var hits = [["L5", pool.slice(-5)], ["L10", pool.slice(-10)], ["L20", pool.slice(-20)], ["TEMP", pool.filter(function (g) { return g.s === season && !g.po; })]];
+      var h2h = nextOpp || null;
+      if (h2h && st.opp === "all") hits.push(["VS " + h2h, games.filter(function (g) { return g.o === h2h; })]);
+      function draw(photo) {
+        x.fillStyle = "#08090b"; x.fillRect(0, 0, W, H);
+        glow(160, 120, 620, "rgba(25,240,139,.22)"); glow(980, 420, 640, "rgba(43,107,255,.20)"); glow(300, 1250, 560, "rgba(138,60,255,.14)");
+        x.textBaseline = "alphabetic";
+        // cabecera
+        x.fillStyle = "#19f08b"; x.beginPath(); x.arc(92, 88, 11, 0, 7); x.fill();
+        x.font = "800 42px " + F; x.fillStyle = "#f4f5f7"; x.fillText("NBA", 116, 103);
+        var w1 = x.measureText("NBA ").width; x.fillStyle = "#19f08b"; x.fillText("LAB", 116 + w1, 103);
+        x.font = "500 26px " + M; x.fillStyle = "#8b919c"; x.textAlign = "right"; x.fillText("@nbavaluelab", W - 80, 100); x.textAlign = "left";
+        // jugador
+        var nameMax = W - 160 - (photo ? 300 : 0);
+        if (photo) { try { x.drawImage(photo, W - 80 - 290, 150, 290, 212); } catch (_) {} }
+        fitText(P.n, nameMax, 80, "900"); x.fillStyle = "#f4f5f7"; x.fillText(P.n, 80, 250);
+        var sub = [P.t, P.p].filter(Boolean).join(" · ");
+        if (nextOpp) {
+          var t = nextG ? madrid(nextG.utc) : null, home = nextG ? nextG.h.t === P.t : true;
+          sub += "  ·  " + (home ? "vs " : "@ ") + nextOpp + (t && t.d ? " · " + t.d + " " + t.h : "");
+        }
+        x.font = "500 30px " + F; x.fillStyle = "#c7cbd2"; x.fillText(sub, 80, 305);
+        var fl = [filterLabel(), st.opp !== "all" ? "vs " + st.opp : "", st.loc === "1" ? "solo local" : st.loc === "0" ? "solo visitante" : ""].filter(Boolean).join(" · ");
+        if (fl) { x.font = "500 24px " + M; x.fillStyle = "#ffd23f"; x.fillText("Filtro: " + fl, 80, 345); }
+        // prop
+        rr(80, 380, W - 160, 150, 26); x.fillStyle = "rgba(16,18,22,.92)"; x.fill(); x.strokeStyle = "rgba(25,240,139,.45)"; x.lineWidth = 2; x.stroke();
+        x.font = "700 24px " + M; x.fillStyle = "#19f08b"; x.fillText("PROP", 116, 428);
+        fitText("Más de " + fmt(line) + " " + s.l.toLowerCase(), W - 232, 62, "800"); x.fillStyle = "#f4f5f7"; x.fillText("Más de " + fmt(line) + " " + s.l.toLowerCase(), 116, 497);
+        // aciertos
+        var n = hits.length, gap = 16, tw = (W - 160 - gap * (n - 1)) / n;
+        hits.forEach(function (hh, i) {
+          var r = hitOf(s, hh[1], line), x0 = 80 + i * (tw + gap);
+          rr(x0, 560, tw, 150, 20); x.fillStyle = "#171a20"; x.fill();
+          x.textAlign = "center"; x.font = "600 22px " + M; x.fillStyle = "#8b919c"; x.fillText(hh[0], x0 + tw / 2, 600);
+          x.font = "800 54px " + F; x.fillStyle = r ? (r.p >= 50 ? "#19f08b" : "#ff4766") : "#5b616b"; x.fillText(r ? Math.round(r.p) + "%" : "—", x0 + tw / 2, 662);
+          x.font = "500 24px " + M; x.fillStyle = "#8b919c"; x.fillText(r ? r.o + "/" + r.n : "", x0 + tw / 2, 694);
+          x.textAlign = "left";
+        });
+        // gráfico
+        var cx0 = 80, cy0 = 790, cw = W - 160, ch = 330, xs = shown.map(function (g) { return val(s, g); });
+        var real = xs.filter(function (v) { return v != null; }), mx = Math.max.apply(null, real.concat([line, 1])) * 1.15;
+        x.font = "600 24px " + M; x.fillStyle = "#8b919c"; x.fillText("ÚLTIMOS " + shown.length + " PARTIDOS", cx0, 765);
+        x.textAlign = "right"; x.fillText("MEDIA " + fmt(avgOf(s, shown)), cx0 + cw, 765); x.textAlign = "left";
+        var bw = cw / Math.max(1, shown.length), Y = function (v) { return cy0 + ch - v / mx * ch; };
+        x.strokeStyle = "#23272f"; x.lineWidth = 1; x.beginPath(); x.moveTo(cx0, cy0 + ch); x.lineTo(cx0 + cw, cy0 + ch); x.stroke();
+        shown.forEach(function (g, i) {
+          var v = xs[i]; if (v == null) return;
+          var bx = cx0 + i * bw + bw * 0.14, w = bw * 0.72, y = Y(v), over = v > line;
+          rr(bx, y, w, Math.max(4, cy0 + ch - y), Math.min(10, w / 3)); x.fillStyle = over ? "#19f08b" : v === line ? "#8b919c" : "#ff4766"; x.fill();
+          x.textAlign = "center";
+          x.font = "700 " + (bw > 60 ? 26 : 20) + "px " + M; x.fillStyle = "#f4f5f7"; x.fillText(fmt(v, s.pct ? 0 : (Number.isInteger(v) ? 0 : 1)), bx + w / 2, y - 10);
+          x.font = "500 " + (bw > 60 ? 20 : 16) + "px " + M; x.fillStyle = "#8b919c"; x.fillText(g.o || "", bx + w / 2, cy0 + ch + 30);
+          x.textAlign = "left";
+        });
+        x.setLineDash([14, 10]); x.strokeStyle = "#ffd23f"; x.lineWidth = 4; x.beginPath(); x.moveTo(cx0, Y(line)); x.lineTo(cx0 + cw, Y(line)); x.stroke(); x.setLineDash([]);
+        x.font = "800 24px " + M; var lt = fmt(line), lw = x.measureText(lt).width + 20;
+        rr(cx0 + cw - lw, Y(line) - 38, lw, 32, 8); x.fillStyle = "#ffd23f"; x.fill(); x.fillStyle = "#08090b"; x.fillText(lt, cx0 + cw - lw + 10, Y(line) - 13);
+        // pie
+        x.strokeStyle = "#23272f"; x.lineWidth = 2; x.beginPath(); x.moveTo(80, 1190); x.lineTo(W - 80, 1190); x.stroke();
+        x.font = "500 24px " + F; x.fillStyle = "#8b919c"; x.fillText("Gráficos y estadísticas gratis, en español:", 80, 1232);
+        fitText(site, W - 160, 34, "800"); x.fillStyle = "#19f08b"; x.fillText(site, 80, 1274);
+        x.font = "500 20px " + M; x.fillStyle = "#5b616b"; x.fillText("+18 · Juega con responsabilidad · jugarbien.es", 80, 1316);
+        x.textAlign = "right"; x.fillStyle = "#2aabee"; x.font = "700 20px " + M; x.fillText("Telegram: NBA LAB", W - 80, 1316); x.textAlign = "left";
+        openShare(cv, s, line, site);
+      }
+      var url = BRAND.photoUrl ? BRAND.photoUrl(P.id) : "", done = false;
+      function go(img) { if (done) return; done = true; draw(img); }
+      var ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+      ready.then(function () {
+        if (!url) return go(null);
+        var img = new Image(); img.crossOrigin = "anonymous";
+        img.onload = function () { go(img); }; img.onerror = function () { go(null); };
+        setTimeout(function () { go(null); }, 2500);
+        img.src = url + (url.indexOf("?") > -1 ? "&" : "?") + "cors=1";
+      });
+    }
+    function openShare(cv, s, line, site) {
+      var old = $(".share-modal"); if (old) old.remove();
+      var hit10 = hitOf(s, filtered().slice(-10), line);
+      var text = P.n + " · Más de " + fmt(line) + " " + s.l.toLowerCase() + (hit10 ? " · L10 " + hit10.o + "/" + hit10.n : "") + (nextOpp ? " · vs " + nextOpp : "") + "\n📊 " + "https://" + site + "\n#NBA #props";
+      var fname = "nbalab-" + (slugOf(P.id) || P.id) + "-" + s.k + "-" + String(line).replace(".", "_") + ".png";
+      var m = document.createElement("div");
+      m.className = "share-modal";
+      m.innerHTML = '<div class="share-card" role="dialog" aria-label="Imagen para compartir"><button class="share-x" type="button" aria-label="Cerrar">×</button>' +
+        '<img alt="Imagen para compartir" src="' + cv.toDataURL("image/png") + '">' +
+        '<div class="share-actions"><button type="button" class="btn btn-primary" data-sh="share" hidden>Compartir</button>' +
+        '<button type="button" class="btn btn-ghost" data-sh="dl">Descargar imagen</button>' +
+        '<button type="button" class="btn btn-ghost" data-sh="copy" hidden>Copiar imagen</button>' +
+        '<button type="button" class="btn btn-ghost" data-sh="txt">Copiar texto para X</button></div>' +
+        '<p class="mono small share-msg" data-sh-msg></p></div>';
+      document.body.appendChild(m);
+      var msg = $("[data-sh-msg]", m);
+      function close() { m.remove(); }
+      $(".share-x", m).addEventListener("click", close);
+      m.addEventListener("click", function (e) { if (e.target === m) close(); });
+      cv.toBlob(function (blob) {
+        if (!blob) return;
+        var file = null;
+        try { file = new File([blob], fname, { type: "image/png" }); } catch (_) {}
+        var bs = $('[data-sh="share"]', m), bc = $('[data-sh="copy"]', m);
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          bs.hidden = false;
+          bs.addEventListener("click", function () { navigator.share({ files: [file], text: text }).catch(function () {}); });
+        }
+        if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+          bc.hidden = false;
+          bc.addEventListener("click", function () {
+            navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(function () { msg.textContent = "Imagen copiada: pégala en X o Telegram."; }, function () { msg.textContent = "Tu navegador no deja copiar imágenes: usa Descargar."; });
+          });
+        }
+        $('[data-sh="dl"]', m).addEventListener("click", function () {
+          var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = fname;
+          document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        });
+      }, "image/png");
+      $('[data-sh="txt"]', m).addEventListener("click", function () {
+        var ok = function () { msg.textContent = "Texto copiado."; };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, function () { msg.textContent = text; });
+        else msg.textContent = text;
+      });
+    }
+
     syncChips();
     safe(renderCharts, "charts");
+    safe(renderDefense, "defense");
+    safe(renderMates, "mates");
     safe(renderLadder, "ladder");
     safe(renderEvo, "evo");
     safe(renderSplits, "splits");
@@ -1416,6 +1740,7 @@
         safe(mountGrid, "grid");
         safe(mountScanner, "scanner");
         safe(mountCalendar, "calendar");
+        safe(mountDefense, "defense");
       }
     } else if (page === "player") {
       safe(bootPlayer, "player");
