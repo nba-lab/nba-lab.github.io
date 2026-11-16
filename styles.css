@@ -625,3 +625,22 @@ select.input { cursor: pointer; }
 .table.dvp td.rk-num.rk-1, .table.dvp td.rk-num.rk-2 { color: var(--over); }
 .table.dvp td.rk-num.rk-4, .table.dvp td.rk-num.rk-5 { color: var(--under); }
 .table.dvp th:nth-child(2), .table.dvp td:nth-child(2) { text-align: left; }
+
+/* ---------- cuotas de las casas ---------- */
+.casas-row { margin-bottom: 10px; padding: 10px 12px; border-radius: 10px; background: linear-gradient(180deg, rgba(25, 240, 139, .06), rgba(25, 240, 139, .02)); border: 1px solid rgba(25, 240, 139, .22); display: flex; flex-direction: column; gap: 8px; }
+.casas-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
+.casa-sel { height: 32px; padding: 0 30px 0 10px; font-size: 13px; }
+.cq-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.cq { display: inline-flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 8px; background: var(--bg-2); border: 1px solid var(--line); font-size: 13px; }
+.cq b { font-weight: 800; }
+.cq em { font-style: normal; font-family: var(--mono); font-weight: 700; color: var(--ink); }
+.cq em.top { color: var(--over); }
+.lchips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.lchip { font: inherit; font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--mute); background: var(--bg-2); border: 1px solid var(--line); border-radius: 99px; padding: 4px 10px; cursor: pointer; }
+.lchip:hover { color: var(--ink); border-color: #3a404a; }
+.lchip.main { border-color: rgba(255, 210, 63, .6); color: var(--bet); }
+.lchip.on { color: #04120b; background: var(--over); border-color: var(--over); }
+.cq-note { margin: 0; font-size: 10px; color: var(--dim); }
+.odd-td { white-space: nowrap; }
+.odd-v { font-family: var(--mono); font-weight: 800; color: var(--ink); }
+.odd-c { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-left: 4px; }

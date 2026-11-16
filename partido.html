@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261116b" />
+  <link rel="stylesheet" href="styles.css?v=20261116c" />
 </head>
 <body data-page="match">
   <header class="nav" data-nav>
@@ -76,7 +76,8 @@
             <h3 data-m-chart-title>—</h3>
             <div class="line-input"><button type="button" data-d="-1" aria-label="Bajar">−</button><input type="number" step="0.5" data-m-line aria-label="Línea de apuesta" /><button type="button" data-d="1" aria-label="Subir">+</button></div>
           </div>
-          <div class="odds-row"><span class="mono tb-lbl">Cuotas de tu casa</span>
+          <div data-m-casas></div>
+          <div class="odds-row"><span class="mono tb-lbl">Calcular valor</span>
             <label class="odd"><span>Over</span><input type="text" inputmode="decimal" placeholder="1,85" data-odd="o" /></label>
             <label class="odd"><span>Under</span><input type="text" inputmode="decimal" placeholder="1,95" data-odd="u" /></label>
             <div class="value-out" data-m-value></div>
@@ -101,7 +102,7 @@
   <script defer src="lib/manifest.js?v=20261109d"></script>
   <script defer src="data/schedule.js?v=202611161009"></script>
   <script defer src="data/index.js?v=202611161009"></script>
-  <script defer src="lib/dvp.js?v=20261116b"></script>
-  <script defer src="main.js?v=20261116b"></script>
+  <script defer src="lib/dvp.js?v=20261116c"></script>
+  <script defer src="main.js?v=20261116c"></script>
 </body>
 </html>

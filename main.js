@@ -359,11 +359,12 @@
     }
     function render() {
       var key = sStat.value, mode = sMode.value, under = sUnder.checked, fixed = parseFloat(String(sLine.value).replace(",", ".")) || 0;
-      box.classList.toggle("disabled", mode === "avg");
-      var rows = IDX.players.filter(function (p) { return (p.l20.pts || []).length >= 5; }).map(function (p) {
-        var ser = idxSeries(p, key), line = mode === "avg" ? lineDefault(idxAvg(p, key)) : fixed;
+      box.classList.toggle("disabled", mode === "avg" || mode === "casa");
+      var side = under ? "u" : "o";
+      var rows = IDX.players.filter(function (p) { return (p.l20.pts || []).length >= 5 && (mode !== "casa" || cuoMain(p.id, key) != null); }).map(function (p) {
+        var ser = idxSeries(p, key), line = mode === "avg" ? lineDefault(idxAvg(p, key)) : mode === "casa" ? cuoMain(p.id, key) : fixed;
         var l10 = ser.slice(-10);
-        return { p: p, ser: ser, line: line, l5: rate(ser, line, 5, under), l10: rate(ser, line, 10, under), l20: rate(ser, line, 20, under),
+        return { p: p, ser: ser, line: line, odd: cuoBest(cuoAt(p.id, key, line), side), l5: rate(ser, line, 5, under), l10: rate(ser, line, 10, under), l20: rate(ser, line, 20, under),
           avg10: l10.reduce(function (a, b) { return a + b; }, 0) / (l10.length || 1) };
       });
       var so = sSort.value;
@@ -371,6 +372,9 @@
         if (so === "avg10") return b.avg10 - a.avg10;
         return ((b[so] || {}).p || 0) - ((a[so] || {}).p || 0) || b.avg10 - a.avg10;
       });
+      var note = $("[data-s-cuotas]");
+      if (note) note.textContent = CUO ? (mode === "casa" ? rows.length + " jugadores con cuotas · " : "") + cuoStamp() + " · +18 · orientativas, compruébalas en la casa" : "";
+      if (!rows.length) { body.innerHTML = '<tr><td colspan="8" class="muted">' + (mode === "casa" ? "Todavía no hay cuotas de este mercado para los próximos partidos." : "Sin jugadores.") + "</td></tr>"; return; }
       body.innerHTML = rows.slice(0, 60).map(function (r) {
         var bars = r.ser.slice(-10).map(function (v) {
           var mx = Math.max(r.line * 1.6, 1), h = Math.max(3, Math.min(26, v / mx * 26));
@@ -379,6 +383,7 @@
         return "<tr>" +
           '<td><a class="player-cell" href="' + pUrl(r.p.id) + '">' + photoHTML(r.p) + "<span>" + esc(r.p.n) + "<small>" + esc(r.p.t) + " · " + esc(r.p.p) + "</small></span></a></td>" +
           '<td class="mono" style="color:var(--bet)">' + (under ? "U " : "O ") + fmt(r.line) + "</td>" +
+          '<td class="odd-td">' + oddCell(r.odd) + "</td>" +
           "<td>" + pctCell(r.l5) + "</td><td>" + pctCell(r.l10) + "</td><td>" + pctCell(r.l20) + "</td>" +
           '<td class="mono">' + fmt(r.avg10) + '</td><td class="hide-sm"><span class="bars-mini">' + bars + "</span></td></tr>";
       }).join("");
@@ -388,6 +393,20 @@
     $("[data-s-dec]").addEventListener("click", function () { sLine.value = Math.max(0.5, (+sLine.value || 0) - 1); render(); });
     $("[data-s-inc]").addEventListener("click", function () { sLine.value = (+sLine.value || 0) + 1; render(); });
     render();
+    cuotasLoad().then(function () {
+      if (!CUO || !CUO.casas.length) return;
+      var hayAlguna = Object.keys(CUO.j || {}).some(function (id) { return cuoLines(id, sStat.value).length; });
+      var opt = document.createElement("option"); opt.value = "casa"; opt.textContent = "Línea de la casa (próximos partidos)";
+      sMode.insertBefore(opt, sMode.firstChild);
+      var cs = $("[data-s-casa]");
+      if (cs) {
+        cs.innerHTML = '<option value="best">Mejor cuota</option>' + CUO.casas.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + "</option>"; }).join("");
+        cs.value = casaPref(); cs.hidden = false;
+        cs.addEventListener("change", function () { store("nl-casa", cs.value); render(); });
+      }
+      if (hayAlguna) sMode.value = "casa";
+      render();
+    });
   }
 
 
@@ -624,6 +643,106 @@
   }
   function dvpClass(d) { return d == null ? "" : d >= 6 ? "dv-up" : d <= -6 ? "dv-down" : "dv-eq"; }
   function dvpPct(d) { return d == null ? "—" : (d > 0 ? "+" : "") + Math.round(d) + "%"; }
+
+  /* =========================================================================
+     CUOTAS DE LAS CASAS (data/cuotas.js, lo crea descargar_cuotas.py)
+     Se cargan aparte para no retrasar la web; si no hay archivo, no sale nada.
+     ========================================================================= */
+  var CUO = null, _cuoP = null;
+  var CASA_ABR = { Bet365: "B365", Winamax: "WMX" };
+  function cuotasLoad() {
+    if (_cuoP) return _cuoP;
+    _cuoP = loadScript("data/cuotas.js?t=" + Math.floor(Date.now() / 300000)).then(function () {
+      CUO = window.__NBA_CUOTAS__ || null;
+      return CUO;
+    }, function () { return null; });
+    return _cuoP;
+  }
+  function casaPref() { var c = store("nl-casa"); return c && CUO && CUO.casas.indexOf(c) > -1 ? c : "best"; }
+  function casaAbr(c) { return CASA_ABR[c] || c; }
+  function sameL(a, b) { return Math.abs(a - b) < 0.01; }
+  function cuoLines(pid, m) {
+    if (!CUO || !CUO.j || !CUO.j[pid]) return [];
+    var now = Date.now();
+    return CUO.j[pid].filter(function (r) {
+      if (r[0] !== m) return false;
+      var g = CUO.g[r[6]];
+      return !g || !g[2] || Date.parse(g[2]) > now; // partido ya empezado: cuota vieja, fuera
+    }).map(function (r) { return { l: r[1], casa: CUO.casas[r[2]], o: r[3], u: r[4], main: !!r[5], fid: r[6] }; });
+  }
+  function cuoPrefList(ls) {
+    var pref = casaPref();
+    if (pref === "best") return ls;
+    var f = ls.filter(function (x) { return x.casa === pref; });
+    return f;
+  }
+  function cuoAt(pid, m, L) { return cuoLines(pid, m).filter(function (x) { return sameL(x.l, L); }); }
+  /* Mejor cuota de un lado (o/u) entre las casas elegidas */
+  function cuoBest(list, side) {
+    var best = null;
+    cuoPrefList(list).forEach(function (x) { var v = x[side]; if (v && (!best || v > best.v)) best = { v: v, casa: x.casa }; });
+    return best;
+  }
+  /* Línea principal de la casa (la que tiene más y menos parecidos) */
+  function cuoMain(pid, m) {
+    var ls = cuoLines(pid, m), pool = cuoPrefList(ls);
+    if (!pool.length) pool = ls;
+    if (!pool.length) return null;
+    var both = pool.filter(function (x) { return x.o && x.u; });
+    var mains = both.filter(function (x) { return x.main; });
+    var cand = mains.length ? mains : both;
+    if (cand.length) {
+      cand.sort(function (a, b) { return Math.abs(a.o - a.u) - Math.abs(b.o - b.u); });
+      return cand[0].l;
+    }
+    var ov = pool.filter(function (x) { return x.o; }).sort(function (a, b) { return Math.abs(a.o - 1.9) - Math.abs(b.o - 1.9); });
+    return ov.length ? ov[0].l : null;
+  }
+  function cuoStamp() {
+    if (!CUO) return "";
+    var u = String(CUO.updated || ""), hoy = new Date().toISOString().slice(0, 10);
+    return "cuotas de las " + u.slice(11, 16) + (u.slice(0, 10) !== hoy ? " del " + fdate(u.slice(0, 10)) : "");
+  }
+  function casaSelectHTML() {
+    if (!CUO || !CUO.casas.length) return "";
+    var p = casaPref();
+    return '<select class="input casa-sel" data-casa-sel aria-label="Casa de apuestas"><option value="best">Mejor cuota</option>' +
+      CUO.casas.map(function (c) { return '<option value="' + esc(c) + '"' + (p === c ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") + "</select>";
+  }
+  function oddCell(b) {
+    return b ? '<span class="odd-v">' + fmt(b.v, 2) + '</span><small class="odd-c">' + esc(casaAbr(b.casa)) + "</small>" : '<span class="muted">—</span>';
+  }
+  /* Bloque de cuotas de un gráfico: cuotas de la línea + líneas que ofrecen las casas */
+  function casasRowHTML(pid, kk, L) {
+    var ls = cuoLines(pid, kk);
+    if (!ls.length) return "";
+    var mine = cuoPrefList(ls), at = mine.filter(function (x) { return sameL(x.l, L); });
+    at.sort(function (a, b) { return a.casa < b.casa ? -1 : 1; });
+    var bo = cuoBest(at, "o"), bu = cuoBest(at, "u");
+    var exact = at.length ? at.map(function (x) {
+      return '<span class="cq"><b>' + esc(x.casa) + "</b>" +
+        '<em class="' + (bo && x.o === bo.v && at.length > 1 ? "top" : "") + '">Más ' + (x.o ? fmt(x.o, 2) : "—") + "</em>" +
+        '<em class="' + (bu && x.u === bu.v && at.length > 1 ? "top" : "") + '">Menos ' + (x.u ? fmt(x.u, 2) : "—") + "</em></span>";
+    }).join("") : '<span class="muted small">' + (mine.length ? "Esta línea no la ofrece " + (casaPref() === "best" ? "ninguna casa" : casaPref()) + " ahora mismo. Elige una de las líneas de abajo." : "Sin cuotas de " + esc(casaPref()) + " para este mercado.") + "</span>";
+    var main = cuoMain(pid, kk), seen = {}, lines = [];
+    (mine.length ? mine : ls).forEach(function (x) { var key = x.l.toFixed(1); if (!seen[key]) { seen[key] = 1; lines.push(x.l); } });
+    lines.sort(function (a, b) { return Math.abs(a - L) - Math.abs(b - L); });
+    lines = lines.slice(0, 9).sort(function (a, b) { return a - b; });
+    var chips = lines.map(function (l) {
+      return '<button type="button" class="lchip' + (sameL(l, L) ? " on" : "") + (main != null && sameL(l, main) ? " main" : "") + '" data-cl="' + l + '" title="' + (main != null && sameL(l, main) ? "Línea principal" : "Usar esta línea") + '">' + fmt(l) + "</button>";
+    }).join("");
+    return '<div class="casas-row"><div class="casas-top"><span class="mono tb-lbl">Cuotas · ' + esc(cuoStamp()) + "</span>" + casaSelectHTML() + "</div>" +
+      '<div class="cq-wrap">' + exact + "</div>" +
+      (chips ? '<div class="lchips"><span class="mono tb-lbl">Líneas</span>' + chips + "</div>" : "") +
+      '<p class="cq-note mono">+18 · Orientativas: comprueba siempre la cuota en la casa antes de apostar.</p></div>';
+  }
+  /* Engancha el selector de casa y los botones de línea de un bloque de cuotas */
+  function bindCasas(host, onLine, onCasa) {
+    var sel = $("[data-casa-sel]", host);
+    if (sel) sel.addEventListener("change", function () { store("nl-casa", sel.value); onCasa(); });
+    $$("[data-cl]", host).forEach(function (b) { b.addEventListener("click", function () { onLine(parseFloat(b.dataset.cl)); }); });
+  }
+
   /* Texto corto del puesto: 1 = el equipo que más concede */
   function dvpRank(r, n) { return r == null ? "—" : r + "º/" + n; }
 
@@ -868,7 +987,7 @@
     var LS_KEY = "pl-lines-" + P.id;
     var st = {
       stats: store("pl-stats") || ["pts", "reb", "ast"],
-      range: (window.innerWidth < 600 ? 20 : 100), loc: "all", opp: "all", po: true, tit: true, sup: true, mate: "", mateMode: "sin", odds: {}, showMin: store("pl-showmin") !== false,
+      range: (window.innerWidth < 600 ? 20 : 100), loc: "all", opp: "all", po: true, tit: true, sup: true, mate: "", mateMode: "sin", odds: {}, manual: {}, showMin: store("pl-showmin") !== false,
       lines: store(LS_KEY) || {}, sample: "l100", evo: "pts", evoW: 5, ladder: "pts"
     };
     st.stats = st.stats.filter(function (kk) { return STAT[kk]; });
@@ -1036,6 +1155,8 @@
     })();
     function getLine(kk, pool) {
       if (st.lines[kk] != null) return st.lines[kk];
+      var cm = cuoMain(P.id, kk);
+      if (cm != null) return cm; // línea principal de la casa
       return lineDefault(avgOf(STAT[kk], pool.slice(-20)));
     }
 
@@ -1077,7 +1198,8 @@
           '<div style="display:flex;gap:8px;align-items:center"><div class="line-input"><button type="button" data-d="-1" aria-label="Bajar">−</button><input type="number" step="0.5" value="' + line + '" aria-label="Línea de apuesta"/><button type="button" data-d="1" aria-label="Subir">+</button></div>' +
           '<button class="share-btn" type="button" title="Crear imagen para compartir en X o Telegram" aria-label="Compartir imagen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Imagen</span></button>' +
           '<button class="x" title="Quitar gráfico" aria-label="Quitar gráfico">×</button></div></div>' +
-          '<div class="odds-row"><span class="mono tb-lbl">Cuotas de tu casa</span>' +
+          '<div class="casas-host"></div>' +
+          '<div class="odds-row"><span class="mono tb-lbl">Calcular valor</span>' +
           '<label class="odd"><span>Over</span><input type="text" inputmode="decimal" placeholder="1,85" data-odd="o" value="' + esc(st.odds[kk + "o"] || "") + '"/></label>' +
           '<label class="odd"><span>Under</span><input type="text" inputmode="decimal" placeholder="1,95" data-odd="u" value="' + esc(st.odds[kk + "u"] || "") + '"/></label>' +
           '<div class="value-out"></div></div>' +
@@ -1104,13 +1226,25 @@
           $(".value-out", card).innerHTML = out.length ? out.join("") : '<span class="mono muted small">Escribe la cuota y te digo si hay valor según los ' + n + " partidos mostrados.</span>";
         }
         $$("[data-odd]", card).forEach(function (oi) {
-          oi.addEventListener("input", function () { st.odds[kk + oi.dataset.odd] = oi.value; valueOut(); });
+          oi.addEventListener("input", function () { st.odds[kk + oi.dataset.odd] = oi.value; st.manual[kk] = !!(oi.value || $$("[data-odd]", card).some(function (x) { return x.value && x !== oi; })); valueOut(); });
         });
+        /* cuotas de las casas: bloque + relleno automático de la calculadora */
+        function paintCasas(L) {
+          var hostC = $(".casas-host", card);
+          hostC.innerHTML = casasRowHTML(P.id, kk, L);
+          if (!st.manual[kk]) {
+            var at = cuoAt(P.id, kk, L), bo = cuoBest(at, "o"), bu = cuoBest(at, "u");
+            st.odds[kk + "o"] = bo ? fmt(bo.v, 2) : ""; st.odds[kk + "u"] = bu ? fmt(bu.v, 2) : "";
+            $$("[data-odd]", card).forEach(function (oi) { oi.value = st.odds[kk + oi.dataset.odd] || ""; });
+          }
+          bindCasas(hostC, function (l) { apply(l); }, function () { renderCharts(); renderLadder(); });
+        }
         function apply(v) {
           v = Math.max(0, Math.round(v * 2) / 2);
           inp.value = v; st.lines[kk] = v; store(LS_KEY, st.lines);
           drawBars($(".plot", card), s, shown, v, pool, st.showMin);
           $(".hit-strip", card).innerHTML = hitStrip(s, pool, v);
+          paintCasas(v);
           valueOut();
         }
         inp.addEventListener("change", function () { apply(parseFloat(String(inp.value).replace(",", ".")) || 0); });
@@ -1121,6 +1255,7 @@
           if (i > -1 && st.stats.length > 1) { st.stats.splice(i, 1); store("pl-stats", st.stats); syncChips(); renderCharts(); }
         });
         $(".hit-strip", card).innerHTML = hitStrip(s, pool, line);
+        paintCasas(line);
         valueOut();
         draws.push(function () { drawBars($(".plot", card), s, shown, line, pool, st.showMin); });
       });
@@ -1139,9 +1274,15 @@
       var lines = [];
       for (var i = -5; i <= 5; i++) { var L = base + i * step; if (L > 0) lines.push(L); }
       var W3 = [["L5", games.slice(-5)], ["L10", games.slice(-10)], ["L15", games.slice(-15)], ["L20", games.slice(-20)], ["L50", games.slice(-50)], ["L100", last100], ["Temp", seasonG], ["Local L100", last100.filter(function (g) { return g.h; })], ["Visit. L100", last100.filter(function (g) { return !g.h; })]];
-      var h = "<thead><tr><th>Línea (over)</th>" + W3.map(function (w) { return "<th>" + w[0] + "</th>"; }).join("") + "</tr></thead><tbody>";
+      var conCuotas = cuoLines(P.id, st.ladder).length > 0;
+      if (conCuotas) { // añade las líneas que ofrecen las casas
+        cuoPrefList(cuoLines(P.id, st.ladder)).forEach(function (x) { if (x.o && !lines.some(function (l) { return sameL(l, x.l); })) lines.push(x.l); });
+        lines.sort(function (a, b) { return a - b; });
+      }
+      var h = "<thead><tr><th>Línea (over)</th>" + (conCuotas ? "<th>Cuota</th>" : "") + W3.map(function (w) { return "<th>" + w[0] + "</th>"; }).join("") + "</tr></thead><tbody>";
       lines.forEach(function (L) {
-        h += '<tr><td class="line">+' + fmt(L) + "</td>" + W3.map(function (w) { return "<td>" + pctCell(hitOf(s, w[1], L)) + "</td>"; }).join("") + "</tr>";
+        h += '<tr><td class="line">+' + fmt(L) + "</td>" + (conCuotas ? '<td class="odd-td">' + oddCell(cuoBest(cuoAt(P.id, st.ladder, L), "o")) + "</td>" : "") +
+          W3.map(function (w) { return "<td>" + pctCell(hitOf(s, w[1], L)) + "</td>"; }).join("") + "</tr>";
       });
       $("[data-ladder]").innerHTML = h + "</tbody>";
     }
@@ -1507,6 +1648,10 @@
     safe(renderCharts, "charts");
     safe(renderDefense, "defense");
     safe(renderMates, "mates");
+    cuotasLoad().then(function () {
+      if (!CUO || !CUO.j || !CUO.j[P.id]) return;
+      safe(renderCharts, "charts-cuotas"); safe(renderLadder, "ladder-cuotas");
+    });
     safe(renderLadder, "ladder");
     safe(renderEvo, "evo");
     safe(renderSplits, "splits");
@@ -1541,7 +1686,7 @@
     document.title = G.a.t + " @ " + G.h.t + " — NBA LAB";
 
     var MSTATS = ["pts", "reb", "ast", "pra", "pr", "pa", "ra", "fg3m", "fg3a", "stl", "blk", "sb", "tov", "min"];
-    var ms = { team: G.a.t, pos: "all", q: "", pid: q.get("p") || null, stat: "pts", range: 20, loc: "all", opp: "all", po: true, mate: "", mateMode: "sin", tit: true, sup: true, showMin: store("pl-showmin") !== false, lines: {}, odds: {} };
+    var ms = { team: G.a.t, pos: "all", q: "", pid: q.get("p") || null, stat: "pts", range: 20, loc: "all", opp: "all", po: true, mate: "", mateMode: "sin", tit: true, sup: true, showMin: store("pl-showmin") !== false, lines: {}, odds: {}, manual: false };
     function oppOf(team) { return team === G.h.t ? G.a.t : G.h.t; }
     function isHome(team) { return team === G.h.t ? 1 : 0; }
     var roster = {};
@@ -1684,7 +1829,7 @@
     function setLine(v) { v = Math.max(0, Math.round(v * 2) / 2); ms.lines[ms.pid + ms.stat] = v; renderChart(); }
     lineInp.addEventListener("change", function () { setLine(parseFloat(String(lineInp.value).replace(",", ".")) || 0); });
     $$("[data-m-card] [data-d]").forEach(function (b) { b.addEventListener("click", function () { setLine((parseFloat(lineInp.value) || 0) + (+b.dataset.d)); }); });
-    $$("[data-m-card] [data-odd]").forEach(function (oi) { oi.addEventListener("input", function () { ms.odds[oi.dataset.odd] = oi.value; renderValue(); }); });
+    $$("[data-m-card] [data-odd]").forEach(function (oi) { oi.addEventListener("input", function () { ms.odds[oi.dataset.odd] = oi.value; ms.manual = $$("[data-m-card] [data-odd]").some(function (x) { return x.value; }); renderValue(); }); });
 
     var cur = null; // { P, games }
     function selectPlayer(id) {
@@ -1697,7 +1842,7 @@
         if (!P) { $("[data-m-player]").innerHTML = '<p class="empty">No se pudieron cargar los partidos de este jugador.</p>'; return; }
         cur = { P: P, games: P.games.slice().sort(function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; }) };
         setupPlayerFilters();
-        ms.odds = {}; $$("[data-m-card] [data-odd]").forEach(function (oi) { oi.value = ""; });
+        ms.odds = {}; ms.manual = false; $$("[data-m-card] [data-odd]").forEach(function (oi) { oi.value = ""; });
         renderChart();
       };
       if (have) go(); else loadScript("data/players/" + encodeURIComponent(id) + ".js?v=" + encodeURIComponent(IDX.updated || "1")).then(go, go);
@@ -1727,8 +1872,19 @@
       var P = cur.P, s = STAT[ms.stat], pl = pool(), shown = pl.slice(-ms.range);
       var opp = oppOf(P.t), home = isHome(P.t);
       var L = ms.lines[ms.pid + ms.stat];
+      if (L == null) L = cuoMain(P.id, ms.stat);
       if (L == null) L = lineDefault(avgOf(s, pl.slice(-20)));
       lineInp.value = L;
+      var mc = $("[data-m-casas]");
+      if (mc) {
+        mc.innerHTML = casasRowHTML(P.id, ms.stat, L);
+        bindCasas(mc, function (l) { setLine(l); }, function () { renderChart(); });
+      }
+      if (!ms.manual) {
+        var atM = cuoAt(P.id, ms.stat, L), bo = cuoBest(atM, "o"), bu = cuoBest(atM, "u");
+        ms.odds.o = bo ? fmt(bo.v, 2) : ""; ms.odds.u = bu ? fmt(bu.v, 2) : "";
+        $$("[data-m-card] [data-odd]").forEach(function (oi) { oi.value = ms.odds[oi.dataset.odd] || ""; });
+      }
       var h = hitOf(s, shown, L), mAvg = avgOf(STAT.min, shown);
       $("[data-m-player]").innerHTML = photoHTML(P, "m-photo") +
         '<div class="m-pinfo"><h2>' + esc(P.n) + '</h2><p class="mono">' + esc([P.t, P.p, P.j ? "#" + P.j : ""].filter(Boolean).join(" · ")) + " · " + esc(s.l) + " · últimos " + shown.length + "</p></div>" +
@@ -1755,6 +1911,7 @@
     syncTeams(); syncStats(); renderList();
     var first = ms.pid && pinfo[ms.pid] ? ms.pid : (roster[ms.team][0] || roster[G.h.t][0] || {}).id;
     if (first) selectPlayer(first);
+    cuotasLoad().then(function () { if (CUO) safe(renderChart, "chart-cuotas"); });
     var rz = 0, lw = window.innerWidth;
     window.addEventListener("resize", function () { tipHide(); clearTimeout(rz); rz = setTimeout(function () { if (Math.abs(window.innerWidth - lw) > 30) { lw = window.innerWidth; renderChart(); } }, 200); });
   }

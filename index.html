@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261116b" />
+  <link rel="stylesheet" href="styles.css?v=20261116c" />
 </head>
 <body data-page="home">
   <header class="nav" data-nav>
@@ -120,6 +120,7 @@
       </div>
       <div class="toolbar">
         <select class="input" data-s-stat aria-label="Estadística"></select>
+        <select class="input" data-s-casa aria-label="Casa de apuestas" hidden></select>
         <select class="input" data-s-mode aria-label="Tipo de línea">
           <option value="fixed">Línea fija</option>
           <option value="avg">Media de temporada de cada jugador</option>
@@ -139,10 +140,11 @@
       </div>
       <div class="table-wrap">
         <table class="table scanner">
-          <thead><tr><th>Jugador</th><th>Línea</th><th>L5</th><th>L10</th><th>L20</th><th>Media L10</th><th class="hide-sm">Últimos 10</th></tr></thead>
+          <thead><tr><th>Jugador</th><th>Línea</th><th>Cuota</th><th>L5</th><th>L10</th><th>L20</th><th>Media L10</th><th class="hide-sm">Últimos 10</th></tr></thead>
           <tbody data-scanner></tbody>
         </table>
       </div>
+      <p class="filter-note mono" data-s-cuotas></p>
     </section>
 
     <section class="section" id="defensa">
@@ -195,7 +197,7 @@
   <script defer src="lib/manifest.js?v=20261109d"></script>
   <script defer src="data/schedule.js?v=202611161009"></script>
   <script defer src="data/index.js?v=202611161009"></script>
-  <script defer src="lib/dvp.js?v=20261116b"></script>
-  <script defer src="main.js?v=20261116b"></script>
+  <script defer src="lib/dvp.js?v=20261116c"></script>
+  <script defer src="main.js?v=20261116c"></script>
 </body>
 </html>
