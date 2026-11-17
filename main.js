@@ -14,18 +14,22 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   };
+  /* Idioma: lo decide i18n.js (window.NL_LANG). En inglés cambian números, fechas, estadísticas y la imagen. */
+  var EN = window.NL_LANG === "en";
   function safe(fn, name) { try { fn(); } catch (e) { console.warn("[" + name + "] falló:", e); } }
   function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); localStorage.setItem(k, JSON.stringify(v)); } catch (_) { return null; } }
 
   /* ---------- formato español ---------- */
   function fmt(x, d) {
     if (x == null || isNaN(x)) return "—";
-    return Number(x).toFixed(d == null ? 1 : d).replace(".", ",");
+    return EN ? Number(x).toFixed(d == null ? 1 : d) : Number(x).toFixed(d == null ? 1 : d).replace(".", ",");
   }
-  var MES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  var MES = EN ? ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+               : ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   function fdate(iso, long) {
     var p = String(iso).split("-");
     if (p.length < 3) return iso;
+    if (EN) return long ? MES[+p[1] - 1] + " " + (+p[2]) + ", " + p[0] : p[1] + "/" + p[2];
     return long ? (+p[2]) + " " + MES[+p[1] - 1] + " " + p[0] : p[2] + "/" + p[1];
   }
   function initials(n) { return String(n).split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join(""); }
@@ -84,6 +88,20 @@
     S("drtg", "Defensive rating", "DRTG", "Avanzadas", k("drtg")),
     S("pace", "Pace", "PACE", "Avanzadas", k("pace"))
   ];
+  if (EN) {
+    var STATS_EN = {
+      pts: ["Points", "PTS"], reb: ["Rebounds", "REB"], ast: ["Assists", "AST"], stl: ["Steals", "STL"], blk: ["Blocks", "BLK"],
+      tov: ["Turnovers", "TOV"], min: ["Minutes", "MIN"], pf: ["Personal fouls", "PF"],
+      pra: ["Points + Rebounds + Assists", "PRA"], pr: ["Points + Rebounds", "P+R"], pa: ["Points + Assists", "P+A"],
+      ra: ["Rebounds + Assists", "R+A"], sb: ["Steals + Blocks", "STL+BLK"], fg3m: ["3-pointers made", "3PM"],
+      fg3a: ["3-pointers attempted", "3PA"], fg3p: ["3-point %", "3P%"], fgm: ["Field goals made", "FGM"],
+      fga: ["Field goals attempted", "FGA"], fgp: ["Field goal %", "FG%"], ftm: ["Free throws made", "FTM"],
+      fta: ["Free throws attempted", "FTA"], ftp: ["Free throw %", "FT%"], oreb: ["Offensive rebounds", "OREB"],
+      dreb: ["Defensive rebounds", "DREB"], pm: ["Plus / minus", "+/-"]
+    };
+    var GROUP_EN = { "Generales": "General", "Combinadas": "Combos", "Tiro": "Shooting", "Avanzadas": "Advanced" };
+    STATS.forEach(function (s) { var e = STATS_EN[s.k]; if (e) { s.l = e[0]; s.s = e[1]; } s.g = GROUP_EN[s.g] || s.g; });
+  }
   var STAT = {};
   STATS.forEach(function (s) { STAT[s.k] = s; });
   var MAIN = ["pts", "reb", "ast", "pra", "pr", "pa", "ra", "fg3m", "fg3a", "stl", "blk", "sb", "tov", "min", "pf", "fgm", "fga", "ftm", "fta", "fgp", "fg3p", "ftp", "usg", "ts", "ortg", "drtg", "pace"];
@@ -104,7 +122,7 @@
   var SIDE = store("nl-side") === "under" ? "under" : "over";
   function setSide(v) { SIDE = v === "under" ? "under" : "over"; store("nl-side", SIDE); }
   function hitGood(x, line) { return SIDE === "under" ? x < line : x > line; }
-  function sideTxt() { return SIDE === "under" ? "Menos de" : "Más de"; }
+  function sideTxt() { return EN ? (SIDE === "under" ? "Under" : "Over") : (SIDE === "under" ? "Menos de" : "Más de"); }
   function sideSegHTML(attr) {
     return '<div class="seg side-seg" ' + attr + ' title="Ver aciertos del Más o del Menos"><button type="button" data-v="over"' + (SIDE === "over" ? ' class="on"' : "") + '>Más</button><button type="button" data-v="under"' + (SIDE === "under" ? ' class="on"' : "") + ">Menos</button></div>";
   }
@@ -253,7 +271,7 @@
       var t0 = performance.now(), dur = 1300;
       (function tick(t) {
         var k2 = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k2, 3);
-        el.textContent = Math.round(to * e).toLocaleString("es-ES");
+        el.textContent = Math.round(to * e).toLocaleString(EN ? "en-US" : "es-ES");
         if (k2 < 1) requestAnimationFrame(tick);
       })(t0);
     });
@@ -551,9 +569,10 @@
   /* =========================================================================
      CALENDARIO
      ========================================================================= */
-  var DOW = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
-  var DOW_L = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-  var MES_L = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  var DOW = EN ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] : ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+  var DOW_L = EN ? ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] : ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  var MES_L = EN ? ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+                 : ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
   function etToday() {
     try {
       return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
@@ -566,8 +585,8 @@
     var dt = new Date(utc);
     try {
       return {
-        h: dt.toLocaleTimeString("es-ES", { timeZone: "Europe/Madrid", hour: "2-digit", minute: "2-digit" }),
-        d: dt.toLocaleDateString("es-ES", { timeZone: "Europe/Madrid", weekday: "short", day: "numeric", month: "short" })
+        h: EN ? dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : dt.toLocaleTimeString("es-ES", { timeZone: "Europe/Madrid", hour: "2-digit", minute: "2-digit" }),
+        d: EN ? dt.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" }) : dt.toLocaleDateString("es-ES", { timeZone: "Europe/Madrid", weekday: "short", day: "numeric", month: "short" })
       };
     } catch (_) { return { h: dt.toISOString().slice(11, 16) + " UTC", d: "" }; }
   }
@@ -892,7 +911,9 @@
     function renderGames() {
       var gs = by[sel] || [];
       var p = sel.split("-");
-      titleEl.textContent = DOW_L[isoDow(sel)].replace(/^./, function (c) { return c.toUpperCase(); }) + " " + (+p[2]) + " de " + MES_L[+p[1] - 1] + " (hora de EE. UU.) · " + gs.length + (gs.length === 1 ? " partido" : " partidos") + (gs.length ? " · en España se juegan de madrugada" : "");
+      titleEl.textContent = EN
+        ? DOW_L[isoDow(sel)] + ", " + MES_L[+p[1] - 1] + " " + (+p[2]) + " (US date) · " + gs.length + (gs.length === 1 ? " game" : " games") + (gs.length ? " · tip-off times in your local time" : "")
+        : DOW_L[isoDow(sel)].replace(/^./, function (c) { return c.toUpperCase(); }) + " " + (+p[2]) + " de " + MES_L[+p[1] - 1] + " (hora de EE. UU.) · " + gs.length + (gs.length === 1 ? " partido" : " partidos") + (gs.length ? " · en España se juegan de madrugada" : "");
       if (!gs.length) { gamesEl.innerHTML = '<p class="empty">No hay partidos este día.</p>'; return; }
       gamesEl.innerHTML = gs.map(function (g) {
         var fin = g.st === 3, live = g.st === 2, t = madrid(g.utc);
@@ -975,11 +996,11 @@
     var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
     var x = cv.getContext("2d");
     var F = "Inter, system-ui, sans-serif", M = "'JetBrains Mono', Consolas, monospace";
-    var site = "nba-lab.github.io/" + (slugOf(P.id) ? "jugador-" + slugOf(P.id) + ".html" : "");
+    var site = "nba-lab.github.io/" + (slugOf(P.id) ? "jugador-" + slugOf(P.id) + ".html" : "") + (EN ? "?lang=en" : "");
     function rr(x0, y0, w, h, r) { x.beginPath(); x.moveTo(x0 + r, y0); x.arcTo(x0 + w, y0, x0 + w, y0 + h, r); x.arcTo(x0 + w, y0 + h, x0, y0 + h, r); x.arcTo(x0, y0 + h, x0, y0, r); x.arcTo(x0, y0, x0 + w, y0, r); x.closePath(); }
     function glow(cx, cy, r, col) { var g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, W, H); }
     function fitText(t, maxW, size, weight) { do { x.font = weight + " " + size + "px " + F; size -= 2; } while (x.measureText(t).width > maxW && size > 30); }
-    var hits = [["L5", pool.slice(-5)], ["L10", pool.slice(-10)], ["L20", pool.slice(-20)], ["TEMP", pool.filter(function (g) { return g.s === season && !g.po; })]];
+    var hits = [["L5", pool.slice(-5)], ["L10", pool.slice(-10)], ["L20", pool.slice(-20)], [EN ? "SZN" : "TEMP", pool.filter(function (g) { return g.s === season && !g.po; })]];
     var h2h = nextOpp || null;
     if (h2h && C.allOpp) hits.push(["VS " + h2h, games.filter(function (g) { return g.o === h2h; })]);
     function draw(photo) {
@@ -1002,7 +1023,7 @@
       }
       x.font = "500 30px " + F; x.fillStyle = "#c7cbd2"; x.fillText(sub, 80, 305);
       var fl = C.filt || "";
-      if (fl) { x.font = "500 24px " + M; x.fillStyle = "#ffd23f"; x.fillText("Filtro: " + fl, 80, 345); }
+      if (fl) { x.font = "500 24px " + M; x.fillStyle = "#ffd23f"; x.fillText((EN ? "Filter: " : "Filtro: ") + (window.NL_T ? window.NL_T(fl) : fl), 80, 345); }
       // prop
       rr(80, 380, W - 160, 150, 26); x.fillStyle = "rgba(16,18,22,.92)"; x.fill(); x.strokeStyle = "rgba(25,240,139,.45)"; x.lineWidth = 2; x.stroke();
       x.font = "700 24px " + M; x.fillStyle = "#19f08b"; x.fillText("PROP", 116, 428);
@@ -1020,8 +1041,8 @@
       // gráfico
       var cx0 = 80, cy0 = 790, cw = W - 160 - 96, ch = 330, xs = shown.map(function (g) { return val(s, g); });
       var real = xs.filter(function (v) { return v != null; }), mx = Math.max.apply(null, real.concat([line, 1])) * 1.15;
-      x.font = "600 24px " + M; x.fillStyle = "#8b919c"; x.fillText("ÚLTIMOS " + shown.length + " PARTIDOS", cx0, 765);
-      x.textAlign = "right"; x.fillText("MEDIA " + fmt(avgOf(s, shown)), W - 80, 765); x.textAlign = "left";
+      x.font = "600 24px " + M; x.fillStyle = "#8b919c"; x.fillText(EN ? "LAST " + shown.length + " GAMES" : "ÚLTIMOS " + shown.length + " PARTIDOS", cx0, 765);
+      x.textAlign = "right"; x.fillText((EN ? "AVG " : "MEDIA ") + fmt(avgOf(s, shown)), W - 80, 765); x.textAlign = "left";
       var bw = cw / Math.max(1, shown.length), Y = function (v) { return cy0 + ch - v / mx * ch; };
       x.strokeStyle = "#23272f"; x.lineWidth = 1; x.beginPath(); x.moveTo(cx0, cy0 + ch); x.lineTo(cx0 + cw, cy0 + ch); x.stroke();
       shown.forEach(function (g, i) {
@@ -1038,9 +1059,9 @@
       rr(cx0 + cw + 12, Y(line) - 16, lw, 32, 8); x.fillStyle = "#ffd23f"; x.fill(); x.fillStyle = "#08090b"; x.fillText(lt, cx0 + cw + 22, Y(line) + 9);
       // pie
       x.strokeStyle = "#23272f"; x.lineWidth = 2; x.beginPath(); x.moveTo(80, 1190); x.lineTo(W - 80, 1190); x.stroke();
-      x.font = "500 24px " + F; x.fillStyle = "#8b919c"; x.fillText("Gráficos y estadísticas gratis, en español:", 80, 1232);
+      x.font = "500 24px " + F; x.fillStyle = "#8b919c"; x.fillText(EN ? "Free NBA prop charts and stats:" : "Gráficos y estadísticas gratis, en español:", 80, 1232);
       fitText(site, W - 160, 34, "800"); x.fillStyle = "#19f08b"; x.fillText(site, 80, 1274);
-      x.font = "500 20px " + M; x.fillStyle = "#5b616b"; x.fillText("+18 · Juega con responsabilidad · jugarbien.es", 80, 1316);
+      x.font = "500 20px " + M; x.fillStyle = "#5b616b"; x.fillText(EN ? "18+ · Please gamble responsibly" : "+18 · Juega con responsabilidad · jugarbien.es", 80, 1316);
       x.textAlign = "right"; x.fillStyle = "#2aabee"; x.font = "700 20px " + M; x.fillText("Telegram: NBA LAB", W - 80, 1316); x.textAlign = "left";
       openShare(cv, s, line, site, C, pool);
     }
@@ -1328,7 +1349,7 @@
 
     function hitStrip(s, pool, line) {
       var W2 = [["L5", pool.slice(-5)], ["L10", pool.slice(-10)], ["L15", pool.slice(-15)], ["L20", pool.slice(-20)], ["L50", pool.slice(-50)], ["L100", pool.slice(-100)],
-        ["TEMP", pool.filter(function (g) { return g.s === season && !g.po; })]];
+        [EN ? "SZN" : "TEMP", pool.filter(function (g) { return g.s === season && !g.po; })]];
       var h2h = nextOpp || lastG.o;
       if (st.opp === "all" && h2h) W2.push(["VS " + h2h + (nextOpp ? " ▸" : ""), games.filter(function (g) { return g.o === h2h; })]);
       var xsAll = vals(s, pool), streak = 0, dir = null;

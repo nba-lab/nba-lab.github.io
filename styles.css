@@ -671,3 +671,12 @@ select.input { cursor: pointer; }
 /* ---------- Más / Menos ---------- */
 .leg-side { display: contents; }
 .side-seg button[data-v="under"].on { background: var(--under); color: #fff; }
+
+/* Botón de idioma (ES / EN) */
+.nav-lang { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; padding: 7px 12px; border-radius: 99px; border: 1px solid var(--line); background: rgba(255, 255, 255, .04); color: #f4f5f7; font-family: inherit; font-weight: 700; font-size: 13px; line-height: 1; cursor: pointer; transition: transform .2s, background .2s, border-color .2s; }
+.nav-lang:hover { transform: translateY(-1px); background: rgba(255, 255, 255, .09); border-color: rgba(255, 255, 255, .25); }
+.nav-lang .fl { font-size: 15px; line-height: 1; }
+.nav-x + .nav-lang + .nav-status { margin-left: 14px; }
+@media (max-width: 900px) { .nav-lang { margin-left: 6px; padding: 7px 9px; } }
+@media (max-width: 480px) { .nav-lang ~ .nav-status { display: none; } .nav-lang .fl { display: none; } }
+@media (min-width: 901px) and (max-width: 1480px) { body[data-page="player"] .nav-x span { display: none; } body[data-page="player"] .nav-x { padding: 9px; } }
