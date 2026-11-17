@@ -1347,7 +1347,7 @@
     function renderCharts() {
       var host = $("[data-charts]");
       var pool = filtered();
-      var shown = pool.slice(-st.range);
+      var shown = st.range ? pool.slice(-st.range) : pool.filter(function (g) { return g.s === season; });
       host.classList.toggle("multi", st.stats.length > 1);
       host.innerHTML = "";
       var fn = $("[data-filter-note]");
@@ -1915,7 +1915,7 @@
     }
     function renderValue() {
       if (!cur) return;
-      var s = STAT[ms.stat], pl = pool(), shown = pl.slice(-ms.range), L = parseFloat(lineInp.value) || 0;
+      var s = STAT[ms.stat], pl = pool(), shown = ms.range ? pl.slice(-ms.range) : pl.filter(function (g) { return g.s === IDX.season; }), L = parseFloat(lineInp.value) || 0;
       var xs = vals(s, shown), n = xs.length, o = xs.filter(function (x) { return x > L; }).length, u = xs.filter(function (x) { return x < L; }).length, out = [];
       [["o", "Over", o], ["u", "Under", u]].forEach(function (k2) {
         var odd = parseFloat(String(ms.odds[k2[0]] || "").replace(",", "."));
@@ -1928,7 +1928,7 @@
     }
     function renderChart() {
       if (!cur) return;
-      var P = cur.P, s = STAT[ms.stat], pl = pool(), shown = pl.slice(-ms.range);
+      var P = cur.P, s = STAT[ms.stat], pl = pool(), shown = ms.range ? pl.slice(-ms.range) : pl.filter(function (g) { return g.s === IDX.season; });
       var opp = oppOf(P.t), home = isHome(P.t);
       var L = ms.lines[ms.pid + ms.stat];
       if (L == null) L = cuoMain(P.id, ms.stat);
