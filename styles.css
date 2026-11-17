@@ -680,3 +680,28 @@ select.input { cursor: pointer; }
 @media (max-width: 900px) { .nav-lang { margin-left: 6px; padding: 7px 9px; } }
 @media (max-width: 480px) { .nav-lang ~ .nav-status { display: none; } .nav-lang .fl { display: none; } }
 @media (min-width: 901px) and (max-width: 1480px) { body[data-page="player"] .nav-x span { display: none; } body[data-page="player"] .nav-x { padding: 9px; } }
+
+/* ---------- Portada: vídeo tutorial (vertical en móvil, horizontal en tablet/ordenador) ---------- */
+.hero-wrap { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); align-items: center; gap: 24px; width: 100%; max-width: 1560px; margin: 0 auto; padding-right: var(--pad); }
+.hero-wrap .hero-inner { max-width: none; }
+.hero-wrap .hero-title { font-size: clamp(44px, 6.6vw, 128px); }
+.hero-video { margin: 0; position: relative; }
+.hv-label { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--over); margin: 0 0 12px; }
+.hv-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--over); box-shadow: 0 0 12px var(--over); animation: pulse 1.6s infinite; }
+.hv-frame { position: relative; border-radius: 22px; overflow: hidden; background: #000; border: 1px solid rgba(25, 240, 139, .45); box-shadow: 0 0 0 6px rgba(25, 240, 139, .06), 0 30px 80px rgba(0, 0, 0, .55), 0 0 60px rgba(25, 240, 139, .14); }
+.hv-frame video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: #000; }
+.hero-video.is-vertical .hv-frame video { aspect-ratio: 9 / 16; }
+.hv-sound { position: absolute; right: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: 14px; font-weight: 700; color: #fff; background: rgba(8, 9, 11, .72); border: 1px solid rgba(255, 255, 255, .2); border-radius: 999px; padding: 9px 15px; cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: border-color .2s, color .2s; }
+.hv-sound:hover, .hv-sound.on { border-color: var(--over); color: var(--over); }
+@media (max-width: 1099px) {
+  .hero-wrap { grid-template-columns: 1fr; gap: 0; padding-right: 0; }
+  .hero-wrap .hero-inner { padding-bottom: 28px; }
+  .hero-wrap .hero-title { font-size: clamp(44px, 9.5vw, 148px); }
+  .hero-video { padding: 0 var(--pad) 80px; max-width: 860px; }
+}
+@media (max-width: 759px) {
+  .hero-video { max-width: 440px; width: 100%; margin: 0 auto; }
+  .hv-sound { font-size: 13px; padding: 8px 13px; }
+  .hero-video.is-vertical .hv-frame { max-width: min(100%, calc(76svh * 9 / 16)); margin: 0 auto; }
+}
+.is-app .hero-video { padding-bottom: 28px; }
