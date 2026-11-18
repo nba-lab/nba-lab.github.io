@@ -705,3 +705,57 @@ select.input { cursor: pointer; }
   .hero-video.is-vertical .hv-frame { max-width: min(100%, calc(76svh * 9 / 16)); margin: 0 auto; }
 }
 .is-app .hero-video { padding-bottom: 28px; }
+
+/* ---------- Recuento de picks ---------- */
+.pk-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
+.pk-kpi { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; position: relative; overflow: hidden; }
+.pk-kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--dim); }
+.pk-kpi.pos::before { background: var(--over); }
+.pk-kpi.neg::before { background: var(--under); }
+.pk-kpi-l { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
+.pk-kpi-u { font-size: clamp(30px, 4vw, 44px); font-weight: 800; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.pk-kpi.pos .pk-kpi-u, .pos { color: var(--over); }
+.pk-kpi.neg .pk-kpi-u, .neg { color: var(--under); }
+.pk-kpi-s { font-size: 12px; color: var(--mute); }
+.pk-ini { color: var(--dim); }
+.pk-live { display: flex; align-items: center; gap: 8px; color: var(--bet); font-size: 13px; margin: 0 0 14px; }
+.pk-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bet); box-shadow: 0 0 0 0 rgba(255, 210, 63, .6); animation: pkPulse 1.6s infinite; }
+@keyframes pkPulse { 70% { box-shadow: 0 0 0 8px rgba(255, 210, 63, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 210, 63, 0); } }
+.pk-bar { margin: 6px 0 14px; overflow-x: auto; }
+.pk-days { display: flex; flex-direction: column; gap: 10px; }
+.pk-day summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 14px 18px; }
+.pk-day summary::-webkit-details-marker { display: none; }
+.pk-day summary::before { content: "›"; color: var(--mute); transition: transform .2s; font-size: 18px; line-height: 1; }
+.pk-day[open] summary::before { transform: rotate(90deg); }
+.pk-day-f { font-weight: 700; text-transform: capitalize; }
+.pk-day-n { color: var(--mute); font-size: 12px; flex: 1; }
+.pk-tw { border: 0; border-top: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius); }
+.pk-table td { vertical-align: middle; }
+.pk-pick { white-space: normal !important; min-width: 220px; }
+.pk-name { display: block; font-weight: 700; }
+.pk-name a { color: var(--ink); text-decoration: none; }
+.pk-name a:hover { color: var(--over); }
+.pk-line { display: block; color: var(--ink); font-size: 13px; }
+.pk-nota { font-style: normal; font-size: 10px; color: var(--bet); border: 1px solid rgba(255, 210, 63, .35); border-radius: 99px; padding: 1px 6px; margin-left: 4px; }
+.pk-game { display: block; color: var(--mute); font-size: 11px; margin-top: 2px; }
+.pk-est { font-family: var(--mono); font-size: 11px; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line); color: var(--mute); }
+.pk-est-win { color: var(--over); border-color: rgba(25, 240, 139, .4); background: var(--over-dim); }
+.pk-est-loss { color: var(--under); border-color: rgba(255, 71, 102, .4); background: var(--under-dim); }
+.pk-est-pend { color: var(--bet); border-color: rgba(255, 210, 63, .4); background: rgba(255, 210, 63, .08); }
+.pk-u { font-weight: 700; }
+.zero { color: var(--mute); }
+.pk-upd { color: var(--dim); font-size: 12px; margin-top: 12px; }
+@media (max-width: 760px) {
+  .pk-kpis { grid-template-columns: 1fr; }
+  .pk-kpi { flex-direction: row; flex-wrap: wrap; align-items: baseline; justify-content: space-between; padding: 14px 16px; }
+  .pk-kpi-l { width: 100%; }
+  .pk-kpi-u { font-size: 30px; }
+  .pk-day summary { padding: 12px 14px; gap: 10px; flex-wrap: wrap; }
+  .pk-table thead { display: none; }
+  .pk-table, .pk-table tbody, .pk-table tr, .pk-table td { display: block; width: 100%; }
+  .pk-table tr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .pk-table tr:last-child { border-bottom: 0; }
+  .pk-table td { padding: 0; border: 0; text-align: left !important; }
+  .pk-table td.pk-pick { grid-column: 1 / -1; }
+  .pk-table td[data-l]::before { content: attr(data-l); display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin-bottom: 2px; }
+}
