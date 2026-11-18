@@ -1,4 +1,4 @@
-window.__NBA_PICKS__={"updated":"2026-11-18T22:30","inicial":0,"picks":[
+window.__NBA_PICKS__={"updated":"2026-11-18T22:30","inicial":-1.1,"inicialMes":"2026-11","picks":[
   {"id":"2026-11-18-01","f":"2026-11-18","gid":"0022600259","partido":"HOU @ IND","p":"Ivica Zubac","pid":1627826,"t":"IND","m":"stl","l":0.5,"lado":"u","c":1.52,"casa":"Winamax","s":1,"est":"pend","r":null},
   {"id":"2026-11-18-02","f":"2026-11-18","gid":"0022600260","partido":"MIL @ MIA","p":"Jaime Jaquez Jr.","pid":1631170,"t":"MIL","m":"fg3m","l":1.5,"lado":"o","c":2.0,"casa":"Winamax","s":1,"est":"pend","r":null},
   {"id":"2026-11-18-03","f":"2026-11-18","gid":"0022600264","partido":"DET @ NOP","p":"Daniss Jenkins","pid":1642450,"t":"DET","m":"blk","l":0.5,"lado":"u","c":1.45,"casa":"Winamax","s":1,"est":"pend","r":null},
