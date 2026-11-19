@@ -1,4 +1,4 @@
-window.__NBA_PICKS__={"updated":"2026-11-19T10:07","inicial":-1.1,"inicialMes":"2026-11","picks":[
+window.__NBA_PICKS__={"updated":"2026-11-19T15:50","inicial":-1.1,"inicialMes":"2026-11","picks":[
   {"id":"2026-11-18-01","f":"2026-11-18","gid":"0022600259","partido":"HOU @ IND","p":"Ivica Zubac","pid":1627826,"t":"IND","m":"stl","l":0.5,"lado":"u","c":1.52,"casa":"Winamax","s":1,"est":"win","r":0},
   {"id":"2026-11-18-02","f":"2026-11-18","gid":"0022600260","partido":"MIL @ MIA","p":"Jaime Jaquez Jr.","pid":1631170,"t":"MIL","m":"fg3m","l":1.5,"lado":"o","c":2.0,"casa":"Winamax","s":1,"est":"loss","r":1},
   {"id":"2026-11-18-03","f":"2026-11-18","gid":"0022600264","partido":"DET @ NOP","p":"Daniss Jenkins","pid":1642450,"t":"DET","m":"blk","l":0.5,"lado":"u","c":1.45,"casa":"Winamax","s":1,"est":"win","r":0},
@@ -12,5 +12,13 @@ window.__NBA_PICKS__={"updated":"2026-11-19T10:07","inicial":-1.1,"inicialMes":"
   {"id":"2026-11-18-11","f":"2026-11-18","gid":"0022600264","partido":"DET @ NOP","p":"Daniss Jenkins","pid":1642450,"t":"DET","m":"ast","l":6.5,"lado":"o","c":2.2,"casa":"Winamax","s":0.75,"est":"win","r":9,"nota":"Escalera"},
   {"id":"2026-11-18-12","f":"2026-11-18","gid":"0022600264","partido":"DET @ NOP","p":"Daniss Jenkins","pid":1642450,"t":"DET","m":"ast","l":9.5,"lado":"o","c":5.5,"casa":"Winamax","s":0.25,"est":"loss","r":9,"nota":"Escalera"},
   {"id":"2026-11-18-13","p":"VJ Edgecombe","pid":1642845,"m":"reb","l":6.5,"c":2.15,"f":"2026-11-18","gid":"0022600261","partido":"PHI @ ORL","t":"PHI","lado":"o","casa":"Winamax","s":0.25,"est":"win","r":8},
-  {"id":"2026-11-18-14","p":"Joel Embiid","pid":203954,"m":"ast","l":4.5,"c":3.0,"f":"2026-11-18","gid":"0022600261","partido":"PHI @ ORL","t":"PHI","lado":"o","casa":"Winamax","s":0.25,"est":"win","r":7}
+  {"id":"2026-11-18-14","p":"Joel Embiid","pid":203954,"m":"ast","l":4.5,"c":3.0,"f":"2026-11-18","gid":"0022600261","partido":"PHI @ ORL","t":"PHI","lado":"o","casa":"Winamax","s":0.25,"est":"win","r":7},
+  {"id":"2026-11-19-01","f":"2026-11-19","gid":"0022600271","partido":"POR @ MIL","p":"Myles Turner","pid":1626167,"t":"MIL","m":"reb","l":4.5,"lado":"o","c":1.74,"casa":"Bet365","s":0.75,"est":"pend","r":null},
+  {"id":"2026-11-19-02","f":"2026-11-19","gid":"0022600272","partido":"NYK @ MIN","p":"Karl-Anthony Towns","pid":1626157,"t":"NYK","m":"fg3m","l":1.5,"lado":"o","c":1.86,"casa":"Bet365","s":0.75,"est":"pend","r":null},
+  {"id":"2026-11-19-03","f":"2026-11-19","gid":"0022600271","partido":"POR @ MIL","p":"Jrue Holiday","pid":201950,"t":"POR","m":"fg3m","l":1.5,"lado":"o","c":1.5,"casa":"Bet365","s":1,"est":"pend","r":null},
+  {"id":"2026-11-19-04","f":"2026-11-19","gid":"0022600272","partido":"NYK @ MIN","p":"Jaden McDaniels","pid":1630183,"t":"MIN","m":"ast","l":2.5,"lado":"o","c":1.47,"casa":"Winamax","s":1,"est":"pend","r":null},
+  {"id":"2026-11-19-05","f":"2026-11-19","gid":"0022600272","partido":"NYK @ MIN","p":"Jaden McDaniels","pid":1630183,"t":"MIN","m":"reb","l":4.5,"lado":"o","c":1.71,"casa":"Bet365","s":0.75,"est":"pend","r":null},
+  {"id":"2026-11-19-06","f":"2026-11-19","gid":"0022600272","partido":"NYK @ MIN","p":"Jaden McDaniels","pid":1630183,"t":"MIN","m":"ast","l":2.5,"lado":"o","c":2.45,"casa":"Bet365","s":0.25,"est":"pend","r":null,"nota":"Combinada","legs":[{"m":"ast","l":2.5,"lado":"o"},{"m":"reb","l":4.5,"lado":"o"}]},
+  {"id":"2026-11-19-07","f":"2026-11-19","gid":"0022600272","partido":"NYK @ MIN","p":"Rudy Gobert","pid":203497,"t":"MIN","m":"stl","l":0.5,"lado":"u","c":1.74,"casa":"Winamax","s":0.75,"est":"pend","r":null},
+  {"id":"2026-11-19-08","f":"2026-11-19","partido":"GSW @ MEM · POR @ MIL","p":"Combinada","t":"MEM","m":"blk","l":0.5,"lado":"u","c":1.53,"casa":"Winamax","s":1,"est":"pend","r":null,"nota":"Combinada","legs":[{"p":"Jaylen Wells","pid":1642377,"t":"MEM","gid":"0022600270","m":"blk","l":0.5,"lado":"u"},{"p":"Jaime Jaquez Jr.","pid":1631170,"t":"MIL","gid":"0022600271","m":"blk","l":0.5,"lado":"u"}]}
 ]};
