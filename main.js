@@ -2086,7 +2086,9 @@
     tg: '<path d="M21.5 3.5 2.8 10.7c-.9.4-.9 1.6.1 1.9l4.6 1.5 1.8 5.6c.3.8 1.3 1 1.9.4l2.6-2.5 4.9 3.6c.7.5 1.7.1 1.9-.7L23 4.9c.2-1-.7-1.8-1.5-1.4Z" fill="currentColor" stroke="none"/>',
     dl: '<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/>',
     share: '<path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/>',
-    plus: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/>'
+    plus: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/>',
+    shield: '<path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6z"/>',
+    picks: '<circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/>'
   };
   function svg(k) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC[k] + "</svg>"; }
 
@@ -2099,6 +2101,8 @@
       ["cal", "Partidos", pre + "#calendario", "calendario"],
       ["users", "Jugadores", pre + "#jugadores", "jugadores"],
       ["scan", "Escáner", pre + "#escaner", "escaner"],
+      ["shield", "Defensa", pre + "#defensa", "defensa"],
+      ["picks", "Picks", pre + "#picks", "picks"],
       ["tg", "Telegram", TG, "tg"]
     ];
     var nav = d.createElement("nav");
@@ -2116,7 +2120,7 @@
     function mark() {
       var cur = page === "player" ? "jugadores" : page === "match" ? "calendario" : "top";
       if (page === "home") {
-        ["calendario", "jugadores", "escaner"].forEach(function (id) {
+        ["calendario", "jugadores", "escaner", "defensa", "picks"].forEach(function (id) {
           var s = d.getElementById(id);
           if (s && s.getBoundingClientRect().top < window.innerHeight * 0.45) cur = id;
         });
