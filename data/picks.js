@@ -1,4 +1,4 @@
-window.__NBA_PICKS__={"updated":"2026-11-20T12:56","inicial":-1.1,"inicialMes":"2026-11","picks":[
+window.__NBA_PICKS__={"updated":"2026-11-20T13:00","inicial":-1.1,"inicialMes":"2026-11","picks":[
   {"id":"2026-11-18-01","f":"2026-11-18","gid":"0022600259","partido":"HOU @ IND","p":"Ivica Zubac","pid":1627826,"t":"IND","m":"stl","l":0.5,"lado":"u","c":1.52,"casa":"Winamax","s":1,"est":"win","r":0},
   {"id":"2026-11-18-02","f":"2026-11-18","gid":"0022600260","partido":"MIL @ MIA","p":"Jaime Jaquez Jr.","pid":1631170,"t":"MIL","m":"fg3m","l":1.5,"lado":"o","c":2.0,"casa":"Winamax","s":1,"est":"loss","r":1},
   {"id":"2026-11-18-03","f":"2026-11-18","gid":"0022600264","partido":"DET @ NOP","p":"Daniss Jenkins","pid":1642450,"t":"DET","m":"blk","l":0.5,"lado":"u","c":1.45,"casa":"Winamax","s":1,"est":"win","r":0},
@@ -31,5 +31,6 @@ window.__NBA_PICKS__={"updated":"2026-11-20T12:56","inicial":-1.1,"inicialMes":"
   {"id":"2026-11-20-04","f":"2026-11-20","partido":"ORL @ BKN","p":"Nolan Traore","pid":1642849,"t":"BKN","m":"pts","l":9.5,"lado":"o","c":1.54,"casa":"Bet365","s":0.75,"est":"pend","r":null},
   {"id":"2026-11-20-05","f":"2026-11-20","partido":"SAC @ LAL","p":"Darius Acuff Jr.","pid":1643411,"t":"SAC","m":"fg3m","l":2.5,"lado":"o","c":1.62,"casa":"Bet365","s":0.75,"est":"pend","r":null},
   {"id":"2026-11-20-06","f":"2026-11-20","partido":"SAC @ LAL","p":"Matisse Thybulle","pid":1629680,"t":"LAL","m":"stl","l":1.5,"lado":"o","c":1.72,"casa":"Winamax","s":0.75,"est":"pend","r":null},
-  {"id":"2026-11-20-07","f":"2026-11-20","partido":"ORL @ BKN","p":"Tristan da Silva","pid":1641783,"t":"ORL","m":"pts","l":9.5,"lado":"o","c":1.55,"casa":"Bet365","s":0.75,"est":"pend","r":null}
+  {"id":"2026-11-20-07","f":"2026-11-20","partido":"ORL @ BKN","p":"Tristan da Silva","pid":1641783,"t":"ORL","m":"pts","l":9.5,"lado":"o","c":1.55,"casa":"Bet365","s":0.75,"est":"pend","r":null},
+  {"id":"2026-11-20-08","f":"2026-11-20","partido":"ORL @ BKN","p":"Combinada","t":"BKN","m":"pts","l":9.5,"lado":"o","c":29,"casa":"Bet365","s":0.1,"est":"pend","r":null,"nota":"Combinada","legs":[{"p":"Danny Wolf","pid":1642874,"t":"BKN","m":"pts","l":9.5,"lado":"o"},{"p":"Nolan Traore","pid":1642849,"t":"BKN","m":"pts","l":14.5,"lado":"o"},{"p":"Tristan da Silva","pid":1641783,"t":"ORL","m":"pts","l":14.5,"lado":"o"}]}
 ]};
