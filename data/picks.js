@@ -1,4 +1,4 @@
-window.__NBA_PICKS__={"updated":"2026-11-20T12:56","inicial":-1.1,"inicialMes":"2026-11","picks":[
+window.__NBA_PICKS__={"updated":"2026-11-21T10:59","inicial":-1.1,"inicialMes":"2026-11","picks":[
   {"id":"2026-11-18-01","f":"2026-11-18","gid":"0022600259","partido":"HOU @ IND","p":"Ivica Zubac","pid":1627826,"t":"IND","m":"stl","l":0.5,"lado":"u","c":1.52,"casa":"Winamax","s":1,"est":"win","r":0},
   {"id":"2026-11-18-02","f":"2026-11-18","gid":"0022600260","partido":"MIL @ MIA","p":"Jaime Jaquez Jr.","pid":1631170,"t":"MIL","m":"fg3m","l":1.5,"lado":"o","c":2.0,"casa":"Winamax","s":1,"est":"loss","r":1},
   {"id":"2026-11-18-03","f":"2026-11-18","gid":"0022600264","partido":"DET @ NOP","p":"Daniss Jenkins","pid":1642450,"t":"DET","m":"blk","l":0.5,"lado":"u","c":1.45,"casa":"Winamax","s":1,"est":"win","r":0},
@@ -25,11 +25,11 @@ window.__NBA_PICKS__={"updated":"2026-11-20T12:56","inicial":-1.1,"inicialMes":"
   {"id":"2026-11-19-10","gid":"0022600271","partido":"POR @ MIL","p":"Jaime Jaquez Jr.","pid":1631170,"t":"MIL","c":2.75,"s":0.4,"f":"2026-11-19","lado":"o","casa":"Winamax","est":"loss","r":2,"m":"ast","l":4.5},
   {"id":"2026-11-19-11","gid":"0022600270","partido":"GSW @ MEM","p":"Yaxel Lendeborg","pid":1642865,"t":"GSW","c":2.2,"s":0.4,"f":"2026-11-19","lado":"o","casa":"Winamax","est":"win","r":7,"m":"ast","l":4.5},
   {"id":"2026-11-19-12","partido":"POR @ MIL · GSW @ MEM","p":"Combinada","t":"","c":6.05,"s":0.2,"nota":"Combinada","legs":[{"p":"Jaime Jaquez Jr.","pid":1631170,"t":"MIL","gid":"0022600271","m":"ast","l":4.5,"lado":"o","r":2},{"p":"Yaxel Lendeborg","pid":1642865,"t":"GSW","gid":"0022600270","m":"ast","l":4.5,"lado":"o","r":7}],"f":"2026-11-19","lado":"o","casa":"Winamax","est":"loss","r":"2 · 7","m":"ast","l":4.5},
-  {"id":"2026-11-20-01","f":"2026-11-20","partido":"NOP @ OKC","p":"Aday Mara","pid":1643530,"t":"OKC","m":"stl","l":0.5,"lado":"u","c":1.6,"casa":"Winamax","s":1,"est":"pend","r":null},
-  {"id":"2026-11-20-02","f":"2026-11-20","partido":"ORL @ BKN","p":"Danny Wolf","pid":1642874,"t":"BKN","m":"pts","l":4.5,"lado":"o","c":1.62,"casa":"Bet365","s":1,"est":"pend","r":null},
-  {"id":"2026-11-20-03","f":"2026-11-20","partido":"HOU @ DEN","p":"Cameron Johnson","pid":1629661,"t":"DEN","m":"stl","l":0.5,"lado":"o","c":1.52,"casa":"Winamax","s":1,"est":"pend","r":null},
-  {"id":"2026-11-20-04","f":"2026-11-20","partido":"ORL @ BKN","p":"Nolan Traore","pid":1642849,"t":"BKN","m":"pts","l":9.5,"lado":"o","c":1.54,"casa":"Bet365","s":0.75,"est":"pend","r":null},
-  {"id":"2026-11-20-05","f":"2026-11-20","partido":"SAC @ LAL","p":"Darius Acuff Jr.","pid":1643411,"t":"SAC","m":"fg3m","l":2.5,"lado":"o","c":1.62,"casa":"Bet365","s":0.75,"est":"pend","r":null},
-  {"id":"2026-11-20-06","f":"2026-11-20","partido":"SAC @ LAL","p":"Matisse Thybulle","pid":1629680,"t":"LAL","m":"stl","l":1.5,"lado":"o","c":1.72,"casa":"Winamax","s":0.75,"est":"pend","r":null},
-  {"id":"2026-11-20-07","f":"2026-11-20","partido":"ORL @ BKN","p":"Tristan da Silva","pid":1641783,"t":"ORL","m":"pts","l":9.5,"lado":"o","c":1.55,"casa":"Bet365","s":0.75,"est":"pend","r":null}
+  {"id":"2026-11-20-01","f":"2026-11-20","partido":"NOP @ OKC","p":"Aday Mara","pid":1643530,"t":"OKC","m":"stl","l":0.5,"lado":"u","c":1.6,"casa":"Winamax","s":1,"est":"win","r":0},
+  {"id":"2026-11-20-02","f":"2026-11-20","partido":"ORL @ BKN","p":"Danny Wolf","pid":1642874,"t":"BKN","m":"pts","l":4.5,"lado":"o","c":1.62,"casa":"Bet365","s":1,"est":"win","r":20},
+  {"id":"2026-11-20-03","f":"2026-11-20","partido":"HOU @ DEN","p":"Cameron Johnson","pid":1629661,"t":"DEN","m":"stl","l":0.5,"lado":"o","c":1.52,"casa":"Winamax","s":1,"est":"win","r":2},
+  {"id":"2026-11-20-04","f":"2026-11-20","partido":"ORL @ BKN","p":"Nolan Traore","pid":1642849,"t":"BKN","m":"pts","l":9.5,"lado":"o","c":1.54,"casa":"Bet365","s":0.75,"est":"loss","r":4},
+  {"id":"2026-11-20-05","f":"2026-11-20","partido":"SAC @ LAL","p":"Darius Acuff Jr.","pid":1643411,"t":"SAC","m":"fg3m","l":2.5,"lado":"o","c":1.62,"casa":"Bet365","s":0.75,"est":"loss","r":2},
+  {"id":"2026-11-20-06","f":"2026-11-20","partido":"SAC @ LAL","p":"Matisse Thybulle","pid":1629680,"t":"LAL","m":"stl","l":1.5,"lado":"o","c":1.72,"casa":"Winamax","s":0.75,"est":"loss","r":1},
+  {"id":"2026-11-20-07","f":"2026-11-20","partido":"ORL @ BKN","p":"Tristan da Silva","pid":1641783,"t":"ORL","m":"pts","l":9.5,"lado":"o","c":1.55,"casa":"Bet365","s":0.75,"est":"loss","r":6}
 ]};
