@@ -49,5 +49,7 @@ window.__NBA_PICKS__={"updated":"2026-11-22T12:09","inicial":-1.1,"inicialMes":"
   {"id":"2026-11-22-05","f":"2026-11-22","partido":"ORL @ WAS","p":"Anthony Black","pid":1641710,"t":"ORL","m":"ast","l":4.5,"lado":"o","c":1.76,"casa":"Bet365","s":1,"est":"pend","r":null},
   {"id":"2026-11-22-06","f":"2026-11-22","partido":"IND @ NYK","p":"Kelly Oubre Jr.","pid":1626162,"t":"IND","m":"blk","l":0.5,"lado":"o","c":1.9,"casa":"Bet365","s":0.75,"est":"pend","r":null},
   {"id":"2026-11-22-07","f":"2026-11-22","partido":"DET @ ATL","p":"Kevin Huerter","pid":1628989,"t":"DET","m":"reb","l":4.5,"lado":"u","c":1.56,"casa":"Winamax","s":0.75,"est":"pend","r":null},
-  {"id":"2026-11-22-08","f":"2026-11-22","partido":"DEN @ CHI","p":"Aaron Gordon","pid":203932,"t":"DEN","m":"fg3m","l":1.5,"lado":"u","c":1.56,"casa":"Winamax","s":1,"est":"pend","r":null}
+  {"id":"2026-11-22-08","f":"2026-11-22","partido":"DEN @ CHI","p":"Aaron Gordon","pid":203932,"t":"DEN","m":"fg3m","l":1.5,"lado":"u","c":1.56,"casa":"Winamax","s":1,"est":"pend","r":null},
+  {"id":"2026-11-22-09","f":"2026-11-22","partido":"ORL @ WAS","p":"Bilal Coulibaly","pid":1641731,"t":"WAS","m":"reb","l":4.5,"lado":"o","c":2.9,"casa":"Bet365","s":0.5,"est":"pend","r":null},
+  {"id":"2026-11-22-10","f":"2026-11-22","partido":"DEN @ CHI","p":"Christian Braun","pid":1631128,"t":"DEN","m":"stl","l":1.5,"lado":"o","c":2.4,"casa":"Bet365","s":0.5,"est":"pend","r":null}
 ]};
