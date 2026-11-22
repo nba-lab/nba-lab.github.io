@@ -1,4 +1,4 @@
-window.__NBA_PICKS__={"updated":"2026-11-22T11:43","inicial":-1.1,"inicialMes":"2026-11","picks":[
+window.__NBA_PICKS__={"updated":"2026-11-22T12:09","inicial":-1.1,"inicialMes":"2026-11","picks":[
   {"id":"2026-11-18-01","f":"2026-11-18","gid":"0022600259","partido":"HOU @ IND","p":"Ivica Zubac","pid":1627826,"t":"IND","m":"stl","l":0.5,"lado":"u","c":1.52,"casa":"Winamax","s":1,"est":"win","r":0},
   {"id":"2026-11-18-02","f":"2026-11-18","gid":"0022600260","partido":"MIL @ MIA","p":"Jaime Jaquez Jr.","pid":1631170,"t":"MIL","m":"fg3m","l":1.5,"lado":"o","c":2.0,"casa":"Winamax","s":1,"est":"loss","r":1},
   {"id":"2026-11-18-03","f":"2026-11-18","gid":"0022600264","partido":"DET @ NOP","p":"Daniss Jenkins","pid":1642450,"t":"DET","m":"blk","l":0.5,"lado":"u","c":1.45,"casa":"Winamax","s":1,"est":"win","r":0},
@@ -41,5 +41,13 @@ window.__NBA_PICKS__={"updated":"2026-11-22T11:43","inicial":-1.1,"inicialMes":"
   {"id":"2026-11-21-04","f":"2026-11-21","partido":"MIL @ PHI","p":"Ryan Rollins","pid":1631157,"t":"MIL","m":"reb","l":2.5,"lado":"o","c":1.74,"casa":"Bet365","s":1,"est":"win","r":6},
   {"id":"2026-11-21-05","f":"2026-11-21","partido":"MEM @ MIN","p":"Cam Spencer","pid":1642285,"t":"MEM","m":"ast","l":4.5,"lado":"o","c":1.6,"casa":"Bet365","s":1,"est":"win","r":5},
   {"id":"2026-11-21-06","f":"2026-11-21","partido":"MEM @ MIN","p":"Cam Spencer","pid":1642285,"t":"MEM","m":"ast","l":6.5,"lado":"o","c":3.05,"casa":"Bet365","s":0.2,"est":"loss","r":5},
-  {"id":"2026-11-21-07","f":"2026-11-21","partido":"MEM @ MIN","p":"Cam Spencer","pid":1642285,"t":"MEM","m":"ast","l":9.5,"lado":"o","c":10.5,"casa":"Bet365","s":0.1,"est":"loss","r":5}
+  {"id":"2026-11-21-07","f":"2026-11-21","partido":"MEM @ MIN","p":"Cam Spencer","pid":1642285,"t":"MEM","m":"ast","l":9.5,"lado":"o","c":10.5,"casa":"Bet365","s":0.1,"est":"loss","r":5},
+  {"id":"2026-11-22-01","f":"2026-11-22","partido":"OKC @ MIA","p":"Aday Mara","pid":1643530,"t":"OKC","m":"stl","l":0.5,"lado":"u","c":1.52,"casa":"Winamax","s":1,"est":"pend","r":null},
+  {"id":"2026-11-22-02","f":"2026-11-22","partido":"OKC @ MIA","p":"Klay Thompson","pid":202691,"t":"MIA","m":"stl","l":0.5,"lado":"u","c":1.48,"casa":"Winamax","s":1,"est":"pend","r":null},
+  {"id":"2026-11-22-03","f":"2026-11-22","partido":"OKC @ MIA · DAL @ UTA · DEN @ CHI · ORL @ WAS","p":"Combinada","t":"","m":"blk","l":0.5,"lado":"u","c":2.52,"casa":"Winamax","s":1,"nota":"Combinada","legs":[{"p":"Pelle Larsson","pid":1641796,"t":"MIA","m":"blk","l":0.5,"lado":"u","r":null},{"p":"Caleb Martin","pid":1628997,"t":"DAL","m":"blk","l":0.5,"lado":"u","r":0},{"p":"Cameron Johnson","pid":1629661,"t":"DEN","m":"blk","l":0.5,"lado":"u","r":null},{"p":"Trae Young","pid":1629027,"t":"WAS","m":"blk","l":0.5,"lado":"u","r":null}],"est":"pend","r":null},
+  {"id":"2026-11-22-04","f":"2026-11-22","partido":"IND @ NYK","p":"Jalen Brunson","pid":1628973,"t":"NYK","m":"fg3m","l":2.5,"lado":"o","c":1.71,"casa":"Bet365","s":0.75,"est":"win","r":6},
+  {"id":"2026-11-22-05","f":"2026-11-22","partido":"ORL @ WAS","p":"Anthony Black","pid":1641710,"t":"ORL","m":"ast","l":4.5,"lado":"o","c":1.76,"casa":"Bet365","s":1,"est":"pend","r":null},
+  {"id":"2026-11-22-06","f":"2026-11-22","partido":"IND @ NYK","p":"Kelly Oubre Jr.","pid":1626162,"t":"IND","m":"blk","l":0.5,"lado":"o","c":1.9,"casa":"Bet365","s":0.75,"est":"pend","r":null},
+  {"id":"2026-11-22-07","f":"2026-11-22","partido":"DET @ ATL","p":"Kevin Huerter","pid":1628989,"t":"DET","m":"reb","l":4.5,"lado":"u","c":1.56,"casa":"Winamax","s":0.75,"est":"pend","r":null},
+  {"id":"2026-11-22-08","f":"2026-11-22","partido":"DEN @ CHI","p":"Aaron Gordon","pid":203932,"t":"DEN","m":"fg3m","l":1.5,"lado":"u","c":1.56,"casa":"Winamax","s":1,"est":"pend","r":null}
 ]};
