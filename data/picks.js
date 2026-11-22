@@ -52,5 +52,7 @@ window.__NBA_PICKS__={"updated":"2026-11-22T12:09","inicial":-1.1,"inicialMes":"
   {"id":"2026-11-22-08","f":"2026-11-22","partido":"DEN @ CHI","p":"Aaron Gordon","pid":203932,"t":"DEN","m":"fg3m","l":1.5,"lado":"u","c":1.56,"casa":"Winamax","s":1,"est":"pend","r":null},
   {"id":"2026-11-22-09","f":"2026-11-22","partido":"ORL @ WAS","p":"Bilal Coulibaly","pid":1641731,"t":"WAS","m":"reb","l":4.5,"lado":"o","c":2.9,"casa":"Bet365","s":0.5,"est":"pend","r":null},
   {"id":"2026-11-22-10","f":"2026-11-22","partido":"DEN @ CHI","p":"Christian Braun","pid":1631128,"t":"DEN","m":"stl","l":1.5,"lado":"o","c":2.4,"casa":"Bet365","s":0.5,"est":"pend","r":null},
-  {"id":"2026-11-22-11","f":"2026-11-22","partido":"OKC @ MIA","p":"Davion Mitchell","pid":1630558,"t":"MIA","m":"pts","l":14.5,"lado":"o","c":1.9,"casa":"Bet365","s":1,"est":"pend","r":null}
+  {"id":"2026-11-22-11","f":"2026-11-22","partido":"OKC @ MIA","p":"Davion Mitchell","pid":1630558,"t":"MIA","m":"pts","l":14.5,"lado":"o","c":1.9,"casa":"Bet365","s":1,"est":"pend","r":null},
+  {"id":"2026-11-22-12","l":19.5,"c":4.1,"s":0.2,"f":"2026-11-22","partido":"OKC @ MIA","p":"Davion Mitchell","pid":1630558,"t":"MIA","m":"pts","lado":"o","casa":"Bet365","est":"pend","r":null},
+  {"id":"2026-11-22-13","l":24.5,"c":10,"s":0.1,"f":"2026-11-22","partido":"OKC @ MIA","p":"Davion Mitchell","pid":1630558,"t":"MIA","m":"pts","lado":"o","casa":"Bet365","est":"pend","r":null}
 ]};
