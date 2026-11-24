@@ -70,5 +70,9 @@ window.__NBA_PICKS__={"updated":"2026-11-24T09:45","inicial":-1.1,"inicialMes":"
   {"id":"2026-11-23-12","f":"2026-11-23","partido":"POR @ PHI","p":"Deni Avdija","pid":1630166,"t":"POR","m":"fg3m","l":1.5,"lado":"o","c":1.74,"casa":"Bet365","s":0.5,"est":"win","r":5},
   {"id":"2026-11-23-13","f":"2026-11-23","partido":"LAC @ HOU","p":"Rui Hachimura","pid":1629060,"t":"LAC","m":"reb","l":4.5,"lado":"o","c":1.89,"casa":"Bet365","s":0.5,"est":"loss","r":3},
   {"id":"2026-11-23-14","f":"2026-11-23","partido":"POR @ PHI","p":"Donovan Clingan","pid":1642270,"t":"POR","m":"reb","l":9.5,"lado":"o","c":1.52,"casa":"Bet365","s":0.5,"est":"win","r":18},
-  {"id":"2026-11-23-15","f":"2026-11-23","partido":"LAC @ HOU","p":"Kevin Durant","pid":201142,"t":"HOU","m":"pts","l":19.5,"lado":"o","c":1.62,"casa":"Bet365","s":0.5,"est":"win","r":32}
+  {"id":"2026-11-23-15","f":"2026-11-23","partido":"LAC @ HOU","p":"Kevin Durant","pid":201142,"t":"HOU","m":"pts","l":19.5,"lado":"o","c":1.62,"casa":"Bet365","s":0.5,"est":"win","r":32},
+  {"id":"2026-11-24-01","f":"2026-11-24","partido":"DET @ ORL","p":"Javonte Green","pid":1629750,"t":"DET","m":"pts","l":4.5,"lado":"o","c":1.58,"casa":"Bet365","s":0.75,"est":"pend","r":null},
+  {"id":"2026-11-24-02","f":"2026-11-24","partido":"DAL @ DEN","p":"Daniel Gafford","pid":1629655,"t":"DAL","m":"reb","l":6.5,"lado":"u","c":1.94,"casa":"Winamax","s":0.75,"est":"pend","r":null},
+  {"id":"2026-11-24-03","f":"2026-11-24","partido":"DET @ ORL","p":"Tristan da Silva","pid":1641783,"t":"ORL","m":"pts","l":9.5,"lado":"o","c":1.74,"casa":"Bet365","s":0.5,"est":"pend","r":null},
+  {"id":"2026-11-24-04","f":"2026-11-24","partido":"DAL @ DEN","p":"Aaron Gordon","pid":203932,"t":"DEN","m":"fg3m","l":1.5,"lado":"u","c":1.58,"casa":"Winamax","s":0.5,"est":"pend","r":null}
 ]};
