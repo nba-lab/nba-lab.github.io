@@ -74,5 +74,7 @@ window.__NBA_PICKS__={"updated":"2026-11-24T09:45","inicial":-1.1,"inicialMes":"
   {"id":"2026-11-24-01","f":"2026-11-24","partido":"DET @ ORL","p":"Javonte Green","pid":1629750,"t":"DET","m":"pts","l":4.5,"lado":"o","c":1.58,"casa":"Bet365","s":0.75,"est":"pend","r":null},
   {"id":"2026-11-24-02","f":"2026-11-24","partido":"DAL @ DEN","p":"Daniel Gafford","pid":1629655,"t":"DAL","m":"reb","l":6.5,"lado":"u","c":1.94,"casa":"Winamax","s":0.75,"est":"pend","r":null},
   {"id":"2026-11-24-03","f":"2026-11-24","partido":"DET @ ORL","p":"Tristan da Silva","pid":1641783,"t":"ORL","m":"pts","l":9.5,"lado":"o","c":1.74,"casa":"Bet365","s":0.5,"est":"pend","r":null},
-  {"id":"2026-11-24-04","f":"2026-11-24","partido":"DAL @ DEN","p":"Aaron Gordon","pid":203932,"t":"DEN","m":"fg3m","l":1.5,"lado":"u","c":1.58,"casa":"Winamax","s":0.5,"est":"pend","r":null}
+  {"id":"2026-11-24-04","f":"2026-11-24","partido":"DAL @ DEN","p":"Aaron Gordon","pid":203932,"t":"DEN","m":"fg3m","l":1.5,"lado":"u","c":1.58,"casa":"Winamax","s":0.5,"est":"pend","r":null},
+  {"id":"2026-11-24-05","f":"2026-11-24","partido":"DET @ ORL · DAL @ DEN","p":"Combinada","t":"","m":"blk","l":0.5,"lado":"u","c":1.53,"casa":"Winamax","s":1,"est":"pend","r":null,"nota":"Combinada","legs":[{"p":"Daniss Jenkins","pid":1642450,"t":"DET","m":"blk","l":0.5,"lado":"u"},{"p":"Caleb Martin","pid":1628997,"t":"DAL","m":"blk","l":0.5,"lado":"u"}]},
+  {"id":"2026-11-24-06","f":"2026-11-24","partido":"DET @ ORL","p":"Tristan da Silva","pid":1641783,"t":"ORL","m":"stl","l":0.5,"lado":"u","c":1.76,"casa":"Winamax","s":0.5,"est":"pend","r":null}
 ]};
