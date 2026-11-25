@@ -86,5 +86,6 @@ window.__NBA_PICKS__={"updated":"2026-11-25T12:13","inicial":-1.1,"inicialMes":"
   {"id":"2026-11-25-07","f":"2026-11-25","partido":"CLE @ NYK","p":"Meleek Thomas","pid":1643509,"t":"CLE","m":"pts","l":9.5,"lado":"o","c":2.2,"casa":"Bet365","s":0.5,"est":"pend","r":null},
   {"id":"2026-11-25-08","f":"2026-11-25","partido":"SAC @ GSW","p":"Domantas Sabonis","pid":1627734,"t":"SAC","m":"reb","l":11.5,"lado":"o","c":1.7,"casa":"Winamax","s":0.5,"est":"pend","r":null},
   {"id":"2026-11-25-10","f":"2026-11-25","partido":"BKN @ MIL","p":"Mikel Brown Jr.","pid":1643414,"t":"BKN","m":"reb","l":2.5,"lado":"u","c":1.94,"casa":"Winamax","s":0.5,"est":"pend","r":null},
-  {"id":"2026-11-25-11","f":"2026-11-25","partido":"BKN @ MIL","p":"Julius Randle","pid":203944,"t":"BKN","m":"reb","l":6.5,"lado":"u","c":1.74,"casa":"Winamax","s":0.5,"est":"pend","r":null}
+  {"id":"2026-11-25-11","f":"2026-11-25","partido":"BKN @ MIL","p":"Julius Randle","pid":203944,"t":"BKN","m":"reb","l":6.5,"lado":"u","c":1.74,"casa":"Winamax","s":0.5,"est":"pend","r":null},
+  {"id":"2026-11-25-09","f":"2026-11-25","partido":"MIA @ PHI","p":"Davion Mitchell","pid":1630558,"t":"MIA","m":"pts","l":14.5,"lado":"o","c":1.85,"casa":"Bet365","s":0.5,"est":"pend","r":null}
 ]};
