@@ -87,5 +87,6 @@ window.__NBA_PICKS__={"updated":"2026-11-25T12:13","inicial":-1.1,"inicialMes":"
   {"id":"2026-11-25-08","f":"2026-11-25","partido":"SAC @ GSW","p":"Domantas Sabonis","pid":1627734,"t":"SAC","m":"reb","l":11.5,"lado":"o","c":1.7,"casa":"Winamax","s":0.5,"est":"pend","r":null},
   {"id":"2026-11-25-10","f":"2026-11-25","partido":"BKN @ MIL","p":"Mikel Brown Jr.","pid":1643414,"t":"BKN","m":"reb","l":2.5,"lado":"u","c":1.94,"casa":"Winamax","s":0.5,"est":"pend","r":null},
   {"id":"2026-11-25-11","f":"2026-11-25","partido":"BKN @ MIL","p":"Julius Randle","pid":203944,"t":"BKN","m":"reb","l":6.5,"lado":"u","c":1.74,"casa":"Winamax","s":0.5,"est":"pend","r":null},
-  {"id":"2026-11-25-09","f":"2026-11-25","partido":"MIA @ PHI","p":"Davion Mitchell","pid":1630558,"t":"MIA","m":"pts","l":14.5,"lado":"o","c":1.85,"casa":"Bet365","s":0.5,"est":"pend","r":null}
+  {"id":"2026-11-25-09","f":"2026-11-25","partido":"MIA @ PHI","p":"Davion Mitchell","pid":1630558,"t":"MIA","m":"pts","l":14.5,"lado":"o","c":1.85,"casa":"Bet365","s":0.5,"est":"pend","r":null},
+  {"id":"2026-11-25-12","f":"2026-11-25","partido":"CHI @ CHA · SAC @ GSW · SAS @ POR","p":"Combinada","t":"","m":"blk","l":0.5,"lado":"u","c":2.08,"casa":"Winamax","s":0.75,"est":"pend","r":null,"nota":"Combinada","legs":[{"p":"Buddy Hield","pid":1627741,"t":"CHI","m":"blk","l":0.5,"lado":"u","r":null},{"p":"De'Andre Hunter","pid":1629631,"t":"SAC","m":"blk","l":0.5,"lado":"u","r":null},{"p":"Scoot Henderson","pid":1630703,"t":"POR","m":"blk","l":0.5,"lado":"u","r":null}]}
 ]};
