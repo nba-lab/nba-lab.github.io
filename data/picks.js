@@ -1,4 +1,4 @@
-window.__NBA_PICKS__={"updated":"2026-11-25T12:13","inicial":-1.1,"inicialMes":"2026-11","picks":[
+window.__NBA_PICKS__={"updated":"2026-11-26T12:21","inicial":-1.1,"inicialMes":"2026-11","picks":[
   {"id":"2026-11-18-01","f":"2026-11-18","gid":"0022600259","partido":"HOU @ IND","p":"Ivica Zubac","pid":1627826,"t":"IND","m":"stl","l":0.5,"lado":"u","c":1.52,"casa":"Winamax","s":1,"est":"win","r":0},
   {"id":"2026-11-18-02","f":"2026-11-18","gid":"0022600260","partido":"MIL @ MIA","p":"Jaime Jaquez Jr.","pid":1631170,"t":"MIL","m":"fg3m","l":1.5,"lado":"o","c":2.0,"casa":"Winamax","s":1,"est":"loss","r":1},
   {"id":"2026-11-18-03","f":"2026-11-18","gid":"0022600264","partido":"DET @ NOP","p":"Daniss Jenkins","pid":1642450,"t":"DET","m":"blk","l":0.5,"lado":"u","c":1.45,"casa":"Winamax","s":1,"est":"win","r":0},
@@ -77,16 +77,16 @@ window.__NBA_PICKS__={"updated":"2026-11-25T12:13","inicial":-1.1,"inicialMes":"
   {"id":"2026-11-24-04","f":"2026-11-24","partido":"DAL @ DEN","p":"Aaron Gordon","pid":203932,"t":"DEN","m":"fg3m","l":1.5,"lado":"u","c":1.58,"casa":"Winamax","s":0.5,"est":"win","r":0},
   {"id":"2026-11-24-05","f":"2026-11-24","partido":"DET @ ORL · DAL @ DEN","p":"Combinada","t":"","m":"blk","l":0.5,"lado":"u","c":1.53,"casa":"Winamax","s":1,"est":"loss","r":"0 · 2","nota":"Combinada","legs":[{"p":"Daniss Jenkins","pid":1642450,"t":"DET","m":"blk","l":0.5,"lado":"u","r":0},{"p":"Caleb Martin","pid":1628997,"t":"DAL","m":"blk","l":0.5,"lado":"u","r":2}]},
   {"id":"2026-11-24-06","f":"2026-11-24","partido":"DET @ ORL","p":"Tristan da Silva","pid":1641783,"t":"ORL","m":"stl","l":0.5,"lado":"u","c":1.76,"casa":"Winamax","s":0.5,"est":"win","r":0},
-  {"id":"2026-11-25-01","f":"2026-11-25","partido":"PHX @ HOU","p":"Steven Adams","pid":203500,"t":"HOU","m":"reb","l":4.5,"lado":"o","c":1.86,"casa":"Winamax","s":0.5,"est":"pend","r":null},
-  {"id":"2026-11-25-02","f":"2026-11-25","partido":"MIA @ PHI","p":"Klay Thompson","pid":202691,"t":"MIA","m":"blk","l":0.5,"lado":"o","c":2.25,"casa":"Bet365","s":0.75,"est":"pend","r":null},
-  {"id":"2026-11-25-03","f":"2026-11-25","partido":"MIN @ OKC","p":"Jaden McDaniels","pid":1630183,"t":"MIN","m":"reb","l":4.5,"lado":"o","c":1.47,"casa":"Bet365","s":0.75,"est":"pend","r":null},
-  {"id":"2026-11-25-04","f":"2026-11-25","partido":"MIN @ OKC","p":"Joan Beringer","pid":1642866,"t":"MIN","m":"blk","l":0.5,"lado":"o","c":1.52,"casa":"Bet365","s":0.75,"est":"pend","r":null},
-  {"id":"2026-11-25-05","f":"2026-11-25","partido":"MIN @ OKC","p":"Jaden McDaniels","pid":1630183,"t":"MIN","m":"ast","l":2.5,"lado":"o","c":1.58,"casa":"Bet365","s":0.5,"est":"pend","r":null},
-  {"id":"2026-11-25-06","f":"2026-11-25","partido":"CLE @ NYK","p":"Jalen Brunson","pid":1628973,"t":"NYK","m":"fg3m","l":2.5,"lado":"o","c":1.89,"casa":"Bet365","s":0.5,"est":"pend","r":null},
-  {"id":"2026-11-25-07","f":"2026-11-25","partido":"CLE @ NYK","p":"Meleek Thomas","pid":1643509,"t":"CLE","m":"pts","l":9.5,"lado":"o","c":2.2,"casa":"Bet365","s":0.5,"est":"pend","r":null},
-  {"id":"2026-11-25-08","f":"2026-11-25","partido":"SAC @ GSW","p":"Domantas Sabonis","pid":1627734,"t":"SAC","m":"reb","l":11.5,"lado":"o","c":1.7,"casa":"Winamax","s":0.5,"est":"pend","r":null},
-  {"id":"2026-11-25-10","f":"2026-11-25","partido":"BKN @ MIL","p":"Mikel Brown Jr.","pid":1643414,"t":"BKN","m":"reb","l":2.5,"lado":"u","c":1.94,"casa":"Winamax","s":0.5,"est":"pend","r":null},
-  {"id":"2026-11-25-11","f":"2026-11-25","partido":"BKN @ MIL","p":"Julius Randle","pid":203944,"t":"BKN","m":"reb","l":6.5,"lado":"u","c":1.74,"casa":"Winamax","s":0.5,"est":"pend","r":null},
-  {"id":"2026-11-25-09","f":"2026-11-25","partido":"MIA @ PHI","p":"Davion Mitchell","pid":1630558,"t":"MIA","m":"pts","l":14.5,"lado":"o","c":1.85,"casa":"Bet365","s":0.5,"est":"pend","r":null},
-  {"id":"2026-11-25-12","f":"2026-11-25","partido":"CHI @ CHA · SAC @ GSW · SAS @ POR","p":"Combinada","t":"","m":"blk","l":0.5,"lado":"u","c":2.08,"casa":"Winamax","s":0.75,"est":"pend","r":null,"nota":"Combinada","legs":[{"p":"Buddy Hield","pid":1627741,"t":"CHI","m":"blk","l":0.5,"lado":"u","r":null},{"p":"De'Andre Hunter","pid":1629631,"t":"SAC","m":"blk","l":0.5,"lado":"u","r":null},{"p":"Scoot Henderson","pid":1630703,"t":"POR","m":"blk","l":0.5,"lado":"u","r":null}]}
+  {"id":"2026-11-25-01","f":"2026-11-25","partido":"PHX @ HOU","p":"Steven Adams","pid":203500,"t":"HOU","m":"reb","l":4.5,"lado":"o","c":1.86,"casa":"Winamax","s":0.5,"est":"win","r":7},
+  {"id":"2026-11-25-02","f":"2026-11-25","partido":"MIA @ PHI","p":"Klay Thompson","pid":202691,"t":"MIA","m":"blk","l":0.5,"lado":"o","c":2.25,"casa":"Bet365","s":0.75,"est":"win","r":1},
+  {"id":"2026-11-25-03","f":"2026-11-25","partido":"MIN @ OKC","p":"Jaden McDaniels","pid":1630183,"t":"MIN","m":"reb","l":4.5,"lado":"o","c":1.47,"casa":"Bet365","s":0.75,"est":"win","r":10},
+  {"id":"2026-11-25-04","f":"2026-11-25","partido":"MIN @ OKC","p":"Joan Beringer","pid":1642866,"t":"MIN","m":"blk","l":0.5,"lado":"o","c":1.52,"casa":"Bet365","s":0.75,"est":"win","r":3},
+  {"id":"2026-11-25-05","f":"2026-11-25","partido":"MIN @ OKC","p":"Jaden McDaniels","pid":1630183,"t":"MIN","m":"ast","l":2.5,"lado":"o","c":1.58,"casa":"Bet365","s":0.5,"est":"win","r":5},
+  {"id":"2026-11-25-06","f":"2026-11-25","partido":"CLE @ NYK","p":"Jalen Brunson","pid":1628973,"t":"NYK","m":"fg3m","l":2.5,"lado":"o","c":1.89,"casa":"Bet365","s":0.5,"est":"loss","r":2},
+  {"id":"2026-11-25-07","f":"2026-11-25","partido":"CLE @ NYK","p":"Meleek Thomas","pid":1643509,"t":"CLE","m":"pts","l":9.5,"lado":"o","c":2.2,"casa":"Bet365","s":0.5,"est":"loss","r":8},
+  {"id":"2026-11-25-08","f":"2026-11-25","partido":"SAC @ GSW","p":"Domantas Sabonis","pid":1627734,"t":"SAC","m":"reb","l":11.5,"lado":"o","c":1.7,"casa":"Winamax","s":0.5,"est":"loss","r":10},
+  {"id":"2026-11-25-09","f":"2026-11-25","partido":"MIA @ PHI","p":"Davion Mitchell","pid":1630558,"t":"MIA","m":"pts","l":14.5,"lado":"o","c":1.85,"casa":"Bet365","s":0.5,"est":"win","r":20},
+  {"id":"2026-11-25-10","f":"2026-11-25","partido":"BKN @ MIL","p":"Mikel Brown Jr.","pid":1643414,"t":"BKN","m":"reb","l":2.5,"lado":"u","c":1.94,"casa":"Winamax","s":0.5,"est":"win","r":2},
+  {"id":"2026-11-25-11","f":"2026-11-25","partido":"BKN @ MIL","p":"Julius Randle","pid":203944,"t":"BKN","m":"reb","l":6.5,"lado":"u","c":1.74,"casa":"Winamax","s":0.5,"est":"loss","r":9},
+  {"id":"2026-11-25-12","f":"2026-11-25","partido":"CHI @ CHA · SAC @ GSW · SAS @ POR","p":"Combinada","t":"","m":"blk","l":0.5,"lado":"u","c":2.08,"casa":"Winamax","s":0.75,"est":"win","r":"0 · 0 · 0","nota":"Combinada","legs":[{"p":"Buddy Hield","pid":1627741,"t":"CHI","m":"blk","l":0.5,"lado":"u","r":0},{"p":"De'Andre Hunter","pid":1629631,"t":"SAC","m":"blk","l":0.5,"lado":"u","r":0},{"p":"Scoot Henderson","pid":1630703,"t":"POR","m":"blk","l":0.5,"lado":"u","r":0}]}
 ]};
