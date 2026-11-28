@@ -108,7 +108,7 @@ window.__NBA_PICKS__={"updated":"2026-11-28T08:45","inicial":-1.1,"inicialMes":"
   {"id":"2026-11-27-17","f":"2026-11-27","partido":"MEM @ MIN","p":"Rudy Gobert","pid":203497,"t":"MIN","m":"pra","l":21.5,"lado":"u","c":1.78,"casa":"Winamax","s":0.5,"est":"loss","r":24},
   {"id":"2026-11-27-18","f":"2026-11-27","partido":"MEM @ MIN","p":"Jaden McDaniels","pid":1630183,"t":"MIN","m":"reb","l":4.5,"lado":"o","c":1.47,"casa":"Bet365","s":0.5,"est":"win","r":8},
   {"id":"2026-11-27-19","f":"2026-11-27","partido":"DAL @ PHX","p":"Caleb Martin","pid":1628997,"t":"DAL","m":"ast","l":2.5,"lado":"o","c":2.2,"casa":"Bet365","s":0.75,"est":"win","r":4},
-  {"id":"2026-11-27-20","f":"2026-11-27","partido":"DAL @ PHX","p":"Kyrie Irving","pid":202681,"t":"DAL","m":"tov","l":2.5,"lado":"u","c":1.48,"casa":"Winamax","s":0.5,"est":"pend","r":null},
+  {"id":"2026-11-27-20","f":"2026-11-27","partido":"DAL @ PHX","p":"Kyrie Irving","pid":202681,"t":"DAL","m":"tov","l":2.5,"lado":"u","c":1.48,"casa":"Winamax","s":0.5,"est":"void","r":null},
   {"id":"2026-11-27-21","f":"2026-11-27","partido":"DAL @ PHX","p":"Dillon Brooks","pid":1628415,"t":"PHX","m":"reb","l":2.5,"lado":"o","c":1.45,"casa":"Bet365","s":0.5,"est":"win","r":3},
   {"id":"2026-11-27-22","f":"2026-11-27","partido":"LAL @ SAS","p":"Collin Sexton","pid":1629012,"t":"LAL","m":"pts","l":9.5,"lado":"o","c":1.89,"casa":"Bet365","s":0.5,"est":"win","r":12},
   {"id":"2026-11-27-23","f":"2026-11-27","partido":"LAL @ SAS","p":"Luka Dončić","pid":1629029,"t":"LAL","m":"ast","l":6.5,"lado":"o","c":1.55,"casa":"Bet365","s":0.5,"est":"win","r":8},
